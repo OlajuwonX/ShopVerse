@@ -1,0 +1,103 @@
+.login {
+  position: absolute;
+  z-index: 1000;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(19, 17, 17, 0.6);
+  display: grid;
+  animation: fadeIn 0.5s;
+}
+
+.login .login-container {
+  margin-top: 1rem;
+  place-self: center;
+  width: max(23vw, 330px);
+  color: rgb(54, 47, 47);
+  padding: 25px 50px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.login .login-container .login-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: black;
+}
+
+.login .login-container .login-title > img {
+  width: 20px;
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 2px;
+  border: 1.2px solid black;
+  transition: all 0.5s ease;
+}
+
+.login .login-container .login-title > img:hover {
+  transform: scale(1.1);
+}
+
+.login .login-container .login-input {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login .login-container .login-input > input {
+  outline: none;
+  border: 1px solid rgba(82, 71, 71, 0.486);
+  padding: 7px 10px;
+  border-radius: 4px;
+}
+
+.login .login-container > button {
+  border: 1px solid rgb(7, 44, 7);
+  padding: 8px;
+  border-radius: 4px;
+  background: tomato;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.5s;
+  margin-top: -5px;
+}
+
+.login .login-container > button:hover {
+  transform: scale(0.9);
+}
+
+.login .login-container .login-condition {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+  margin-top: -15px;
+}
+
+.login .login-container .login-condition > input {
+  margin-top: 5px;
+}
+
+.login .span {
+  color: tomato;
+  cursor: pointer;
+  font-weight: 500;
+  font-style: italic;
+}
+
+@media (max-width: 750px) {
+  .login {
+    right: 0;
+    width: 100%;
+    background: rgb(244, 234, 234);
+    animation: fadeIn 0.8s;
+  }
+
+  .login .login-container {
+    margin-top: 0;
+  }
+}

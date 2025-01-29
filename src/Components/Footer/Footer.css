@@ -1,0 +1,163 @@
+.footer {
+  margin-top: 30px;
+  display: flex;
+  background: rgba(216, 158, 148, 0.957);
+  color: rgb(9, 14, 5);
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 8vw;
+  margin-top: 80px;
+}
+
+.footer-content {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 80px;
+}
+
+.footer-left,
+.footer-right,
+.footer-center {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 20px;
+}
+
+.footer-left li,
+.footer-right li,
+.footer-center li {
+  list-style: none;
+  margin-bottom: 10px;
+  font-weight: 450;
+  cursor: pointer;
+}
+
+.footer-right h2,
+.footer-center h2 {
+  font-weight: 600;
+  margin-top: 20px;
+}
+
+.footer-left > p {
+  font-weight: 450;
+}
+
+.social-icons > a {
+  margin-right: 15px;
+  font-size: 26px;
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 6px 8px;
+}
+
+.footer-logo {
+  display: flex;
+  cursor: pointer;
+}
+
+.footer-logo .logoimg {
+  width: 3.7rem;
+  padding-bottom: 5px;
+  padding-right: 7px;
+}
+
+.footer-logo > h2 {
+  font-family: "Montserrat", sans-serif;
+  font-size: 27px;
+  color: rgb(222, 96, 71);
+  padding-top: 15px;
+}
+
+.footer > p {
+  font-weight: 500;
+}
+
+.footer > hr {
+  width: 100%;
+  height: 2px;
+  margin: 20px 0;
+  background-color: rgba(15, 35, 6, 0.658);
+  border: none;
+}
+
+.footer-small {
+  display: none;
+}
+
+.footer button {
+  border: none;
+  background: none;
+  font-size: 17px;
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+@media (max-width: 750px) {
+  .footer {
+    margin-top: 60px;
+  }
+
+  .footer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+  }
+
+  .footer-content .footer-right {
+    display: none;
+  }
+
+  .footer-content .footer-center {
+    display: none;
+  }
+
+  .footer-small {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .footer-logo {
+    margin-bottom: -10px;
+  }
+
+  .footer-logo .logoimg {
+    width: 3rem;
+    padding-right: 5px;
+  }
+
+  .footer-logo > h2 {
+    font-size: 22px;
+    padding-top: 14px;
+  }
+
+  .footer-left {
+    font-size: 15px;
+  }
+
+  .footer-small h2 {
+    font-size: 20px;
+    margin-bottom: -7px;
+    margin-top: 8px;
+  }
+
+  .footer-small ul li {
+    font-size: 15px;
+    margin-bottom: 7px;
+  }
+
+  .footer > hr {
+    width: 100%;
+    margin: 7px 0;
+  }
+
+  .footer-copyright {
+    text-align: center;
+  }
+}

@@ -1,0 +1,66 @@
+.f-display {
+  margin-top: 30px;
+}
+
+.f-display > h2 {
+  font-size: max(1.9rem, 24px);
+  font-weight: 550;
+  margin-bottom: 15px;
+}
+
+.f-display .food-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  margin-top: 30px;
+  gap: 30px;
+  row-gap: 50px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pagination button {
+  padding: 5px 10px;
+  border: 1px solid rgb(27, 72, 27);
+  background: #fff;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.pagination button.active {
+  background-color: rgb(211, 127, 112);
+  color: #fff;
+  border-color: rgb(14, 62, 14);
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 750px) {
+  .f-display {
+    margin-top: 20px;
+  }
+
+  .f-display > h2 {
+    font-size: max(2rem);
+  }
+
+  .f-display .food-list {
+    margin-right: 16px;
+  }
+
+  .f-display .food-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    margin-top: 10px;
+    gap: 25px;
+    row-gap: 50px;
+    padding: 0;
+  }
+}

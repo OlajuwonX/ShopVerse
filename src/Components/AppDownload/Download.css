@@ -1,0 +1,43 @@
+.download {
+  margin: auto auto;
+  margin-top: 100px;
+  font-size: max(2.7rem, 20px);
+  text-align: center;
+  font-weight: 500;
+}
+
+.download-platform {
+  display: flex;
+  justify-content: center;
+  gap: max(2.5vw, 30px);
+  margin-top: 40px;
+}
+
+.download-platform > img {
+  width: 240px;
+  cursor: pointer;
+  transition: 0.5s ease;
+}
+
+.download-platform > img:hover {
+  transform: scale(1.06);
+}
+
+@media (max-width: 750px) {
+  .download {
+    margin: auto auto;
+    margin-top: 60px;
+    font-size: 22px;
+  }
+
+  .download-platform {
+    display: flex;
+    justify-content: center;
+    gap: max(2.2vw, 20px);
+    margin-top: 30px;
+  }
+
+  .download-platform > img {
+    width: 140px;
+  }
+}
