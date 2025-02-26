@@ -1,0 +1,157 @@
+@media (max-width: 750px) {
+    .Nav {
+      display: none;
+    }
+  
+    .small-nav {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      top: 60px;
+      width: 86vw;
+      z-index: 20;
+      background: inherit;
+    }
+  
+    .dash-logo {
+      display: flex;
+    }
+  
+    .small-nav .dash-logo .hamburger-button {
+      font-size: 30px;
+      color: tomato;
+      padding-right: 8px;
+      cursor: pointer;
+      background: inherit;
+      border: none;
+    }
+  
+    .dash-menu {
+      width: 75vw;
+      position: absolute;
+      z-index: 9;
+      background: rgba(243, 242, 242, 0.959);
+      padding-left: 25px;
+      margin-left: -29px;
+      margin-top: -65px;
+      padding-top: 120px;
+      padding-bottom: 30px;
+      border-radius: 0 0 20px;
+      box-shadow: 0 0 13px -1px tomato;
+    }
+  
+    .dash-menu .dash-close {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+  
+    .dash-menu .dash-close > p {
+      font-size: 22px;
+      font-weight: 600;
+      color: black;
+    }
+  
+    .dash-menu .dash-close > button {
+      font-size: 22px;
+      padding: 2px 4px;
+      border-radius: 50%;
+      border: 1px solid rgb(20, 50, 20);
+      right: -17px;
+      margin-top: -45px;
+      position: absolute;
+      box-shadow: 0 0 13px -1px tomato;
+      cursor: pointer;
+    }
+  
+    .dash-menu .nav-menu #link {
+      display: flex;
+      gap: 15px;
+      font-size: 20px;
+      font-weight: 450;
+      color: black;
+      margin-bottom: 15px;
+    }
+  
+    .dash-menu .nav-menu #link:hover {
+      color: tomato;
+    }
+  
+    .small-nav .dash-logo .search-bar form {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid tomato;
+      width: 63vw;
+      height: 33px;
+      border-radius: 20px;
+      margin-bottom: 40px;
+      padding-left: 5px;
+      padding-right: 3px;
+    }
+  
+    .small-nav .dash-logo .search-bar form input {
+      width: 50vw;
+      border: none;
+      font-size: 14px;
+      margin-left: 5px;
+      margin-top: -2px;
+      outline: none;
+      background: none;
+    }
+  
+    .small-nav .dash-logo .search-bar form button {
+      border: 1px solid rgb(18, 53, 18);
+      border-radius: 50%;
+      padding: 2px 4px;
+      background-color: rgb(197, 167, 162);
+    }
+  
+    .small-nav .dash-logo .search-bar .search-icon {
+      width: 1.2rem;
+    }
+  
+    .dash-logo .navlogo {
+      display: flex;
+      margin-top: -5px;
+      z-index: 10;
+    }
+  
+    .dash-logo .navlogo .logoimg {
+      width: 2rem;
+      padding-bottom: 10px;
+    }
+  
+    .dash-logo .navlogo h2 {
+      font-size: 22px;
+      color: rgb(224, 125, 108);
+      padding-top: 6px;
+      padding-left: 4px;
+    }
+  
+    .small-nav .cart {
+      right: 0;
+      margin-top: -4px;
+    }
+  
+    .small-nav .cart .small-basket img {
+      width: 26px;
+    }
+  
+    .small-nav .cart .dot {
+      position: relative;
+      top: -35px;
+      right: -24px;
+      width: 10px;
+      height: 10px;
+      background-color: tomato;
+      border-radius: 50%;
+    }
+  
+    .dash-menu .button {
+      padding: 10px 60px;
+      font-size: 16px;
+      border-radius: 20px;
+      color: black;
+    }
+  }

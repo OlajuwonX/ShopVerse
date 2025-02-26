@@ -1,0 +1,60 @@
+.light-mode {
+    background-color: white;
+    color: black;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .dark-mode {
+    background-color: #000000ee;
+    color: white;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .tablet-toggle {
+    display: flex;
+  }
+  
+  .toggle-btn {
+    position: absolute;
+    width: 46px;
+    height: 22px;
+    top: 8px;
+    right: 33px;
+    background: #110b09;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 1000000;
+  }
+  
+  .toggle-btn.active {
+    background: #d6c7c0;
+    justify-content: flex-end;
+  }
+  
+  .toggle-circle {
+    width: 16px;
+    height: 15px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  
+  .icon {
+    font-size: 18px;
+    color: #000000;
+  }
+  
+  .dark-mode .icon {
+    color: black;
+    font-size: 18px;
+  }

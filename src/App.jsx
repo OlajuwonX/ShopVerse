@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { Route, Routes } from "react-router-dom";
 import Nav from "./Components/Nav/Nav";
 import Home from "./Pages/Home/Home";
@@ -6,32 +6,16 @@ import PlaceOrder from "./Pages/PlaceOrder/PlaceOrder";
 import Cart from "./Pages/Cart/Cart";
 import Footer from "./Components/Footer/Footer";
 import LogIn from "./Components/LogInPopUp/LogIn";
-
 import { menu_list } from "./assets/assets";
-
-import { CiLight } from "react-icons/ci";
-import { MdDarkMode } from "react-icons/md";
-
+import ThemeToggleProvider, {
+  ThemeToggle,
+} from "./Components/ThemeToggle/ThemeToggle";
+import { ThemeContext } from "./Components/ThemeToggle/ThemeToggle";
 import "./App.css";
 
 const App = () => {
   const [showLogIn, setShowLogIn] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [product, setProduct] = useState(menu_list);
-
-  // Persist Dark Mode Preference
-  useEffect(() => {
-    const savedMode = localStorage.getItem("darkMode") === "true";
-    setDarkMode(savedMode);
-  }, []);
-
-  const toggleDarkMode = () => {
-    setDarkMode((prevMode) => {
-      const newMode = !prevMode;
-      localStorage.setItem("darkMode", newMode);
-      return newMode;
-    });
-  };
 
   // Search Functionality
   const searchBtn = (searchQuery) => {
@@ -39,29 +23,28 @@ const App = () => {
       menu_item.category.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setProduct(filteredProduct);
-
-    if (filteredProduct.length === 0) {
-      console.log("No products found");
-    }
   };
 
   return (
+    <ThemeToggleProvider>
+      <AppContent
+        showLogIn={showLogIn}
+        setShowLogIn={setShowLogIn}
+        searchBtn={searchBtn}
+        product={product}
+      />
+    </ThemeToggleProvider>
+  );
+};
+
+// Separate component to use the context
+const AppContent = ({ showLogIn, setShowLogIn, searchBtn, product }) => {
+  const { darkMode } = useContext(ThemeContext);
+  
+  return (
     <div className={darkMode ? "dark-mode" : "light-mode"}>
-      {/* Dark Mode Toggle */}
-      <div className="tablet-toggle">
-        <div
-          onClick={toggleDarkMode}
-          className={`toggle-btn ${darkMode ? "active" : ""}`}
-        >
-          <div className="toggle-circle">
-            {darkMode ? (
-              <MdDarkMode className="icon" />
-            ) : (
-              <CiLight className="icon" />
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Toggle Button */}
+      <ThemeToggle />
 
       {/* Log In Popup */}
       {showLogIn && <LogIn setShowLogIn={setShowLogIn} />}
@@ -70,7 +53,7 @@ const App = () => {
       <div className="app">
         <Nav setShowLogIn={setShowLogIn} searchBtn={searchBtn} />
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home product={product} />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/order" element={<PlaceOrder />} />
         </Routes>
