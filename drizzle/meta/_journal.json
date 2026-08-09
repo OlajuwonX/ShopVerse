@@ -8,6 +8,13 @@
       "when": 1786308736390,
       "tag": "0000_pink_proudstar",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786309644107,
+      "tag": "0001_round_scorpion",
+      "breakpoints": true
     }
   ]
 }
