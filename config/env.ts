@@ -5,6 +5,7 @@ import { z } from "zod";
 const serverEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_ORIGIN: z.string().url().default("http://localhost:3000"),
+  DATABASE_URL: z.string().url().optional(),
 });
 
 const clientEnvSchema = z.object({
@@ -33,3 +34,13 @@ if (!parsedClientEnv.success) {
 
 export const serverEnv = parsedServerEnv.data;
 export const clientEnv = parsedClientEnv.data;
+
+export function requireServerEnv<K extends keyof typeof serverEnv>(key: K) {
+  const value = serverEnv[key];
+
+  if (!value) {
+    throw new Error(`Missing required server environment variable: ${key}`);
+  }
+
+  return value;
+}
