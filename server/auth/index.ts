@@ -1,3 +1,17 @@
+export {
+  assertCanGrantPermissions,
+  canGrantPermissions,
+  getCurrentStaffActor,
+  hasAnyPermission,
+  hasEveryPermission,
+  hasPermission,
+  isPermissionCode,
+  PermissionDeniedError,
+  requireAnyPermission,
+  requirePermission,
+  resolveStaffPermissions,
+} from "@/server/auth/permissions";
+export type { StaffActor } from "@/server/auth/permissions";
 export { authenticateCustomer, authenticateStaff } from "@/server/auth/authenticate";
 export {
   clearSessionCookie,

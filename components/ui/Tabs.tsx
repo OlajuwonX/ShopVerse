@@ -28,7 +28,7 @@ export function Tabs({ className, items, label, ...props }: TabsProps) {
                 : "border-transparent text-text-muted hover:text-text",
             )}
             href={item.href}
-            key={item.href}
+            key={`${item.href}-${item.label}`}
           >
             {item.label}
           </Link>
