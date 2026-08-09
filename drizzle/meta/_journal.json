@@ -15,6 +15,13 @@
       "when": 1786309644107,
       "tag": "0001_round_scorpion",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786310886522,
+      "tag": "0002_funny_white_tiger",
+      "breakpoints": true
     }
   ]
 }
