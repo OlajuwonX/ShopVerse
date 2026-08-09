@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   index,
+  integer,
   pgEnum,
   pgTable,
   text,
@@ -243,6 +244,32 @@ export const staffInvitations = pgTable(
       "staff_invitations_expiry_valid",
       sql`${table.createdAt} < ${table.expiresAt}`,
     ),
+  ],
+);
+
+export const rateLimits = pgTable(
+  "rate_limits",
+  {
+    id,
+    action: text("action").notNull(),
+    identifierHash: text("identifier_hash").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    windowStartedAt: timestamp("window_started_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+    blockedUntil: timestamp("blocked_until", { mode: "date", withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("rate_limits_action_identifier_unique").on(
+      table.action,
+      table.identifierHash,
+    ),
+    index("rate_limits_blocked_until_idx").on(table.blockedUntil),
+    check("rate_limits_attempts_nonnegative", sql`${table.attempts} >= 0`),
   ],
 );
 

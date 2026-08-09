@@ -29,6 +29,13 @@
       "when": 1786311442582,
       "tag": "0003_needy_molecule_man",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786315524941,
+      "tag": "0004_magenta_magdalene",
+      "breakpoints": true
     }
   ]
 }
