@@ -1,8 +1,19 @@
-# React + Vite
+# ShopVerse
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ShopVerse is a portfolio-grade ecommerce platform being rebuilt from the old Xquiseat Vite prototype.
 
-Currently, two official plugins are available:
+Stage 02 establishes a clean Next.js App Router foundation. Storefront, catalogue, checkout, payments, database and admin functionality are intentionally implemented in later stages.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Scripts
+
+```bash
+pnpm install
+pnpm run dev
+pnpm run typecheck
+pnpm run lint
+pnpm run build
+```
+
+## Local Agent Guidance
+
+The `.claude/` folder is intentionally local-only and ignored by git. It contains the master specification, staged roadmap, edge cases, primitives and completion notes that guide each implementation stage.
