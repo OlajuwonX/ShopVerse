@@ -122,8 +122,23 @@ export function hasAnyPermission(
   return permissionsToCheck.some((permission) => hasPermission(actor, permission));
 }
 
-export async function requirePermission(permission: Permission) {
+/**
+ * Resolves the staff actor or throws the generic denial. Callers receive a
+ * non-nullable actor so downstream code cannot accidentally treat an
+ * unauthenticated request as an authorized one.
+ */
+export async function requireStaffActor(): Promise<StaffActor> {
   const actor = await getCurrentStaffActor();
+
+  if (!actor) {
+    throw new PermissionDeniedError();
+  }
+
+  return actor;
+}
+
+export async function requirePermission(permission: Permission): Promise<StaffActor> {
+  const actor = await requireStaffActor();
 
   if (!hasPermission(actor, permission)) {
     throw new PermissionDeniedError();
@@ -132,10 +147,12 @@ export async function requirePermission(permission: Permission) {
   return actor;
 }
 
-export async function requireAnyPermission(permissionsToCheck: readonly Permission[]) {
-  const actor = await getCurrentStaffActor();
+export async function requireAnyPermission(
+  permissionsToCheck: readonly Permission[],
+): Promise<StaffActor> {
+  const actor = await requireStaffActor();
 
-  if (!actor || !hasAnyPermission(actor, permissionsToCheck)) {
+  if (!hasAnyPermission(actor, permissionsToCheck)) {
     throw new PermissionDeniedError();
   }
 

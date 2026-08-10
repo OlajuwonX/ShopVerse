@@ -7,6 +7,17 @@ const serverEnvSchema = z.object({
   APP_ORIGIN: z.string().url().default("http://localhost:3000"),
   DATABASE_URL: z.string().url().optional(),
   AUTH_SECRET: z.string().min(32).optional(),
+  // The admin surface is reached through an externally configured path segment.
+  // Obscurity is not authorization (MASTER §39, §77) — this only keeps the
+  // backoffice out of casual discovery and crawler logs.
+  ADMIN_ROUTE_SEGMENT: z
+    .string()
+    .min(8)
+    .max(64)
+    .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/, {
+      message: "ADMIN_ROUTE_SEGMENT must be a lowercase URL-safe slug",
+    })
+    .optional(),
 });
 
 const clientEnvSchema = z.object({
