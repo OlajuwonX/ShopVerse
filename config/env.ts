@@ -18,10 +18,21 @@ const serverEnvSchema = z.object({
       message: "ADMIN_ROUTE_SEGMENT must be a lowercase URL-safe slug",
     })
     .optional(),
+  // Cloudinary credentials. The API secret signs uploads and destroy calls and
+  // must never reach the browser (MASTER §76).
+  CLOUDINARY_API_KEY: z.string().min(1).optional(),
+  CLOUDINARY_API_SECRET: z.string().min(1).optional(),
 });
 
 const clientEnvSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+  // The cloud name appears in every delivery URL, so it is genuinely public.
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z
+    .string()
+    .regex(/^[a-zA-Z0-9_-]+$/, {
+      message: "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME must be URL-safe",
+    })
+    .optional(),
 });
 
 const parsedServerEnv = serverEnvSchema.safeParse(process.env);

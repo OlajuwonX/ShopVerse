@@ -36,6 +36,13 @@
       "when": 1786315524941,
       "tag": "0004_magenta_magdalene",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786390057749,
+      "tag": "0005_even_raider",
+      "breakpoints": true
     }
   ]
 }
