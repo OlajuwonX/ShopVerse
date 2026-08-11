@@ -5,14 +5,6 @@ import { createHash } from "node:crypto";
 import { requireServerEnv } from "@/config/env";
 import { CLOUDINARY_API_ORIGIN, PRODUCT_IMAGE_FOLDER } from "@/constants/media";
 
-/**
- * Minimal Cloudinary client.
- *
- * The official SDK was not adopted (see the Stage 13 completion document):
- * signed uploads need a SHA-1 over sorted parameters, and delivery URLs are
- * plain string construction, so the whole surface we use is ~80 lines against a
- * documented HTTP API. The API secret stays server-side in every path here.
- */
 function getCloudName() {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
@@ -25,11 +17,6 @@ function getCloudName() {
   return cloudName;
 }
 
-/**
- * Cloudinary's documented scheme: take the parameters that will be sent
- * (excluding `file`, `cloud_name`, `resource_type` and `api_key`), sort them by
- * key, join as `k=v&k=v`, append the API secret, and SHA-1 the result.
- */
 export function signParams(params: Record<string, string>) {
   const apiSecret = requireServerEnv("CLOUDINARY_API_SECRET");
 
@@ -69,12 +56,7 @@ export class CloudinaryError extends Error {
   }
 }
 
-/**
- * Uploads already-validated bytes. Callers must have run
- * `validateImageUpload()` first — this function does not re-check the payload.
- */
 export async function uploadProductImage(input: {
-  // Narrowed to a non-shared buffer so the bytes can back a `Blob` directly.
   bytes: Uint8Array<ArrayBuffer>;
   contentType: string;
 }): Promise<CloudinaryUploadResult> {
@@ -124,11 +106,6 @@ export async function uploadProductImage(input: {
   };
 }
 
-/**
- * Deletes an asset. Cloudinary answers `{"result":"not found"}` with HTTP 200
- * for an already-deleted id, which is treated as success so cleanup retries are
- * idempotent (MEDIA-04).
- */
 export async function destroyImage(publicId: string) {
   const cloudName = getCloudName();
   const apiKey = requireServerEnv("CLOUDINARY_API_KEY");

@@ -13,10 +13,6 @@ export type StaffProfile = {
   title: string | null;
 };
 
-/**
- * Loads the display identity for the signed-in staff member. Scoped by the
- * server-resolved `staffAccountId` — never by a client-supplied id.
- */
 export async function getStaffProfile(
   staffAccountId: string,
 ): Promise<StaffProfile | null> {

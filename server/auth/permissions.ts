@@ -122,11 +122,6 @@ export function hasAnyPermission(
   return permissionsToCheck.some((permission) => hasPermission(actor, permission));
 }
 
-/**
- * Resolves the staff actor or throws the generic denial. Callers receive a
- * non-nullable actor so downstream code cannot accidentally treat an
- * unauthenticated request as an authorized one.
- */
 export async function requireStaffActor(): Promise<StaffActor> {
   const actor = await getCurrentStaffActor();
 

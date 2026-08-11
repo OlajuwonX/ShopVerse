@@ -24,11 +24,6 @@ export type CategoryNode = {
 
 export type CategorySummary = Omit<CategoryNode, "children" | "depth">;
 
-/**
- * Maximum supported nesting. Primitive 12 sets three levels as the working
- * assumption; anything deeper is an architecture decision, not a data accident,
- * so the recursive walk is bounded rather than trusting the data to terminate.
- */
 export const MAX_CATEGORY_DEPTH = 3;
 
 const activeCategoryColumns = {
@@ -49,13 +44,6 @@ async function selectActiveCategories() {
     .orderBy(asc(categories.sortOrder), asc(categories.name));
 }
 
-/**
- * Builds the active category tree in one query.
- *
- * The whole active set is small and read on nearly every storefront page, so it
- * is fetched once and assembled in memory rather than issuing a query per level
- * (MASTER §61 — avoid N+1).
- */
 export async function getCategoryTree(): Promise<CategoryNode[]> {
   const rows = await selectActiveCategories();
 
@@ -73,8 +61,6 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
     if (parent) {
       parent.children.push(node);
     } else {
-      // A child whose parent is inactive is surfaced at the root rather than
-      // silently disappearing from navigation.
       roots.push(node);
     }
   }
@@ -104,15 +90,6 @@ export async function getCategoryBySlug(slug: string) {
   return rows[0] ?? null;
 }
 
-/**
- * The documented inclusion rule (primitives/12): a category page shows its own
- * products **plus its descendants'**. Every caller uses this function rather
- * than reimplementing the walk per page.
- *
- * Expressed as a recursive CTE so the depth walk happens in one round trip, with
- * a depth bound that makes a malformed cycle terminate rather than hang
- * (defence in depth alongside DATA-04's write-time validation).
- */
 export async function getCategoryAndDescendantIds(categoryId: string) {
   const result = await db.execute<{ id: string }>(sql`
     with recursive branch as (
@@ -131,9 +108,6 @@ export async function getCategoryAndDescendantIds(categoryId: string) {
   return result.rows.map((row) => row.id);
 }
 
-/**
- * Ancestor chain, root first — the source for breadcrumbs (MASTER §19).
- */
 export async function getCategoryAncestors(categoryId: string) {
   const result = await db.execute<{
     depth: number;
@@ -167,14 +141,6 @@ export type ResolvedAttribute = {
   unit: string | null;
 };
 
-/**
- * Resolves the filterable attributes for a category, including those inherited
- * from its ancestors (primitives/12).
- *
- * This is the single resolution function the filter panel is generated from —
- * no page hand-writes a filter list. A nearer category wins on conflict, so a
- * child can override an inherited definition.
- */
 export async function getCategoryFilterAttributes(
   categoryId: string,
 ): Promise<ResolvedAttribute[]> {
@@ -221,7 +187,6 @@ export async function getCategoryFilterAttributes(
     )
     .orderBy(asc(categoryAttributes.sortOrder), asc(attributes.name));
 
-  // Nearest ancestor wins: depth 0 is the category itself.
   const nearest = new Map<string, (typeof rows)[number]>();
 
   for (const row of rows) {
@@ -277,10 +242,6 @@ export async function getCategoryFilterAttributes(
   }));
 }
 
-/**
- * Cycle detection for category writes (DATA-04). A category may not be its own
- * ancestor; the database check constraint only catches the self-parent case.
- */
 export async function wouldCreateCategoryCycle(input: {
   categoryId: string;
   parentId: string | null;

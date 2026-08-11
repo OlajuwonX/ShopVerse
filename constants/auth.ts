@@ -19,8 +19,7 @@ export const AUTH_RATE_LIMITS = {
     windowMs: 15 * 60 * 1000,
     blockMs: 30 * 60 * 1000,
   },
-  // Per-IP ceiling so credential stuffing cannot rotate through email
-  // addresses to stay under the per-identifier limit (primitives/07-security.md).
+
   staffLoginIp: {
     action: "staff_login_ip",
     maxAttempts: 20,

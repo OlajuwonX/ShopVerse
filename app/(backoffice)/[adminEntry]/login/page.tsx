@@ -7,11 +7,6 @@ import { requireStaffSession } from "@/server/auth/sessions";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Reachable only with the configured entry segment, which the parent layout has
- * already validated. The page states nothing about the store, the staff
- * directory, or why a previous attempt failed.
- */
 export default async function StaffLoginPage() {
   const existingSession = await requireStaffSession();
 

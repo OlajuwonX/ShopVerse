@@ -17,13 +17,6 @@ type MediaUploaderProps = {
   productId: string;
 };
 
-/**
- * Admin upload primitive. Stage 32 mounts this inside the product editor.
- *
- * The client-side size and type checks exist purely to fail fast — the server
- * re-validates every one of them from the file's magic bytes, and the browser's
- * declared MIME type is never trusted (SEC-08, SEC-09, SEC-10).
- */
 export function MediaUploader({ productId }: MediaUploaderProps) {
   const [state, formAction, isPending] = useActionState(
     uploadProductImageAction,

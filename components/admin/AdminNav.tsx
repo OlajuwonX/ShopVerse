@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn";
 type AdminNavProps = {
   adminRoot: string;
   onNavigate?: () => void;
-  /** The signed-in actor's own permissions, used only to shape this menu. */
+
   permissions: readonly Permission[];
 };
 

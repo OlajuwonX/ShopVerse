@@ -1,12 +1,3 @@
-/**
- * Idempotent catalogue seed.
- *
- * Runs outside the Next.js runtime (`pnpm db:seed`), so it avoids every module
- * that imports `server-only` and builds its own connection, exactly like the
- * RBAC seed. Re-running is safe: every insert is keyed on a natural unique
- * column and conflicts are ignored, so a second run inserts nothing and reports
- * the same totals.
- */
 import { neon } from "@neondatabase/serverless";
 import { eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -51,7 +42,6 @@ function createClient() {
 
 type Client = ReturnType<typeof createClient>;
 
-/** Ratings are 0–5 in the seed data; the schema stores 0–500. */
 function toStoredRating(rating: number | undefined) {
   return rating === undefined ? null : Math.round(rating * 100);
 }
@@ -67,10 +57,6 @@ async function seedBrandRows(db: Client) {
   return new Map(rows.map((row) => [row.slug, row.id]));
 }
 
-/**
- * Categories are inserted parent-before-child so the self-referencing foreign
- * key always resolves. Depth is derived from the data rather than assumed.
- */
 async function seedCategoryRows(db: Client) {
   const bySlug = new Map(seedCategories.map((category) => [category.slug, category]));
 
@@ -228,11 +214,6 @@ async function seedCategoryAttributeRows(
   return rows.length;
 }
 
-/**
- * Product slugs are assigned through `uniqueSlug` against the slugs already
- * claimed in this run *and* those already in the database, so a name collision
- * disambiguates deterministically rather than failing the unique index (DATA-03).
- */
 async function resolveProductSlugs(db: Client) {
   const existing = await db.select({ slug: products.slug }).from(products);
   const taken = new Set(existing.map((row) => row.slug));
@@ -324,9 +305,6 @@ async function seedProductRows(
       throw new Error(`Product ${product.name} was not persisted`);
     }
 
-    // Attribute values. The schema's check constraint allows exactly one of
-    // optionId / valueText / valueNumber / valueBoolean, so the column is
-    // chosen from the attribute's declared type rather than guessed.
     const attributeRows = Object.entries(product.attributes ?? {}).map(
       ([attributeSlug, value]) => {
         const attributeId = context.attributeIds.get(attributeSlug);
@@ -369,7 +347,6 @@ async function seedProductRows(
         .onConflictDoNothing();
     }
 
-    // Variants and their inventory.
     const variants = variantRowsFor(product, slug);
 
     await db

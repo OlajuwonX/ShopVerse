@@ -12,11 +12,10 @@ import {
 import { id } from "@/server/db/schema/shared";
 
 export const mediaCleanupReason = pgEnum("media_cleanup_reason", [
-  // Uploaded to Cloudinary, but the database row could not be written (MEDIA-03).
   "orphaned_upload",
-  // Database row removed; the Cloudinary asset still needs deleting (MEDIA-04).
+
   "detached_asset",
-  // Upload rejected after Cloudinary reported its dimensions.
+
   "rejected_upload",
 ]);
 
@@ -26,13 +25,6 @@ export const mediaCleanupStatus = pgEnum("media_cleanup_status", [
   "failed",
 ]);
 
-/**
- * Durable record of Cloudinary assets that must be deleted.
- *
- * Cloudinary and Neon cannot be written atomically, so every path that leaves
- * an asset without an owning row enqueues it here rather than attempting a
- * best-effort delete that could be lost to a crash (MEDIA-03, MEDIA-04).
- */
 export const mediaCleanupQueue = pgTable(
   "media_cleanup_queue",
   {

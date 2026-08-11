@@ -20,19 +20,13 @@ import { writeAuditLog } from "@/server/security/audit";
 import { assertSameOrigin } from "@/server/security/origin";
 import { getRequestContext } from "@/server/security/request-context";
 
-/**
- * Every failure path returns this same message. Distinguishing "no such staff
- * account" from "wrong password" from "rate limited" would let an attacker
- * enumerate staff (primitives/07-security.md, SEC-03).
- */
 const GENERIC_FAILURE = "Those details did not match an active account.";
 
 async function recordFailure(reason: string, email: string | null) {
   await writeAuditLog({
     action: "staff.sign_in.failed",
     actorType: "system",
-    // The email is a login attempt identifier, not resolved account PII, and is
-    // required to investigate credential stuffing.
+
     after: { email, reason },
     targetType: "staff_session",
   });
@@ -99,7 +93,6 @@ export async function signInStaff(
     targetType: "staff_session",
   });
 
-  // Outside any try/catch: redirect() signals control flow by throwing.
   redirect(adminPath());
 }
 

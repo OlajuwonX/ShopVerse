@@ -18,11 +18,6 @@ import {
 import { writeAuditLog } from "@/server/security/audit";
 import { assertSameOrigin } from "@/server/security/origin";
 
-/**
- * Staff-facing failures are specific: the actor is authenticated and telling
- * them *why* an upload was refused is helpful, not a disclosure. Permission
- * denials are the exception — those stay generic.
- */
 const FAILURE_MESSAGES: Record<ProductImageFailure, string> = {
   dimensions_too_large: "That image is larger than 6000px on its longest side.",
   dimensions_too_small: "That image is smaller than 400px on its shortest side.",
@@ -76,7 +71,6 @@ export async function uploadProductImageAction(
     return { error: "Choose an image to upload.", uploadedId: null };
   }
 
-  // Reject on the declared size before reading the body into memory.
   if (file.size > MAX_IMAGE_BYTES) {
     return { error: FAILURE_MESSAGES.too_large, uploadedId: null };
   }

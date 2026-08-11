@@ -9,11 +9,6 @@ export type RequestContext = {
   userAgent: string | null;
 };
 
-/**
- * Vercel sets `x-forwarded-for` on every request; the left-most entry is the
- * client. Behind other proxies this header is spoofable, so the value is only
- * ever used for rate limiting and audit correlation — never for authorization.
- */
 function readClientIp(headerList: Headers) {
   const forwardedFor = headerList.get("x-forwarded-for");
 

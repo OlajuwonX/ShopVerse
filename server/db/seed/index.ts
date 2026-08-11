@@ -1,10 +1,6 @@
 import { seedCatalogue } from "@/server/db/seed/catalogue";
 import { seedRbac } from "@/server/db/seed/rbac";
 
-/**
- * RBAC first: the catalogue seed does not depend on it, but a run that fails
- * halfway is more useful if the backoffice is already reachable.
- */
 async function main() {
   const rbac = await seedRbac();
 

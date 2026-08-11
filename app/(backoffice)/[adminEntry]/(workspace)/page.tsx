@@ -9,8 +9,6 @@ import { guardStaffActor } from "@/server/auth/guards";
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
-  // Re-resolved rather than inherited from the layout: every page owns its own
-  // authorization, so removing the layout guard could never silently open this up.
   const actor = await guardStaffActor();
   const profile = await getStaffProfile(actor.staffAccountId);
 

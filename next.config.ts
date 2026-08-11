@@ -15,9 +15,7 @@ const securityHeaders = [
   },
   {
     key: "Content-Security-Policy",
-    // Cloudinary delivery is allowlisted by exact origin, never a wildcard
-    // (primitives/07-security.md). `blob:`/`data:` cover local upload previews.
-    // `default-src`/`script-src` are still outstanding and owned by Stage 39.
+
     value: [
       "base-uri 'self'",
       "object-src 'none'",

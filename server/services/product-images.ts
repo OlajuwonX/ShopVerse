@@ -49,14 +49,6 @@ export async function listProductImages(productId: string) {
     .orderBy(asc(productImages.sortOrder), asc(productImages.createdAt));
 }
 
-/**
- * Validate → upload → persist.
- *
- * The order matters. Everything checkable locally is rejected before any bytes
- * reach Cloudinary. Dimensions can only be confirmed from Cloudinary's own
- * response, so an upload that fails that check is destroyed via the cleanup
- * queue rather than left behind (MEDIA-03).
- */
 export async function addProductImage(input: {
   alt: string;
   bytes: Uint8Array<ArrayBuffer>;
@@ -124,8 +116,7 @@ export async function addProductImage(input: {
         alt: input.alt,
         cloudinaryPublicId: uploaded.publicId,
         height: uploaded.height,
-        // First image of a product becomes primary automatically, so a product
-        // is never left without one.
+
         isPrimary: currentCount === 0,
         productId: input.productId,
         sortOrder: currentCount,
@@ -149,22 +140,12 @@ export async function addProductImage(input: {
 
     return { data: record, ok: true };
   } catch {
-    // The asset exists in Cloudinary but nothing references it.
     await enqueueMediaCleanup(uploaded.publicId, "orphaned_upload");
 
     return { ok: false, reason: "upload_failed" };
   }
 }
 
-/**
- * Deletes the row and promotes a replacement primary in one statement.
- *
- * The `neon-http` driver has no interactive transactions, so the delete and the
- * promotion are expressed as data-modifying CTEs: a single statement runs in an
- * implicit transaction, which closes the window where a product could be left
- * with no primary image (MEDIA-06). Values are bound by Drizzle's `sql` tag,
- * not interpolated (SEC-11).
- */
 export async function removeProductImage(
   imageId: string,
 ): Promise<ProductImageResult<{ cloudinaryPublicId: string; productId: string }>> {
@@ -200,8 +181,6 @@ export async function removeProductImage(
     return { ok: false, reason: "not_found" };
   }
 
-  // The database no longer references the asset, so its deletion is now a
-  // cleanup concern rather than part of this request (MEDIA-04).
   await enqueueMediaCleanup(row.cloudinary_public_id, "detached_asset");
 
   return {
@@ -210,10 +189,6 @@ export async function removeProductImage(
   };
 }
 
-/**
- * Promotes one image to primary. Demote-then-promote would transiently violate
- * the partial unique index, so both sides move in a single statement.
- */
 export async function setPrimaryProductImage(
   imageId: string,
 ): Promise<ProductImageResult<{ productId: string }>> {
@@ -239,11 +214,6 @@ export async function setPrimaryProductImage(
   return { data: { productId: row.product_id }, ok: true };
 }
 
-/**
- * Applies an explicit ordering. Ids not belonging to the product are ignored by
- * the `product_id` predicate, so a forged id cannot reorder another product's
- * gallery (IDOR).
- */
 export async function reorderProductImages(input: {
   imageIds: readonly string[];
   productId: string;

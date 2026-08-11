@@ -17,13 +17,12 @@ import {
 import type { Permission } from "@/constants/permissions";
 
 export type AdminNavItem = {
-  /** `false` until the owning stage ships the destination. */
   available: boolean;
   icon: LucideIcon;
   label: string;
-  /** Path segments appended to the configured admin root. */
+
   segments: readonly string[];
-  /** Actor needs at least one of these. Empty means any active staff member. */
+
   permissions: readonly Permission[];
 };
 
@@ -32,10 +31,6 @@ export type AdminNavGroup = {
   label: string;
 };
 
-/**
- * Navigation is permission-shaped for clarity only. Hiding an item is UX;
- * enforcement lives in each route's own permission check (primitives/09-rbac.md).
- */
 export const adminNavGroups: readonly AdminNavGroup[] = [
   {
     label: "Overview",

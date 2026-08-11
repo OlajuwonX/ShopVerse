@@ -10,14 +10,6 @@ type CleanupReason = "orphaned_upload" | "detached_asset" | "rejected_upload";
 
 const MAX_CLEANUP_ATTEMPTS = 5;
 
-/**
- * Records an asset that must be removed from Cloudinary.
- *
- * Enqueuing is deliberately separate from deleting: Cloudinary and Neon cannot
- * be written atomically, so a best-effort delete that fails mid-request would
- * silently leak the asset. The queue makes the leak visible and retryable
- * (MEDIA-03, MEDIA-04).
- */
 export async function enqueueMediaCleanup(
   cloudinaryPublicId: string,
   reason: CleanupReason,
@@ -25,14 +17,6 @@ export async function enqueueMediaCleanup(
   await db.insert(mediaCleanupQueue).values({ cloudinaryPublicId, reason });
 }
 
-/**
- * Drains pending cleanup entries. Safe to run repeatedly and concurrently:
- * `destroyImage` treats an already-deleted asset as success, so a duplicate
- * pass resolves rather than fails.
- *
- * No scheduler is wired yet — Stage 36 owns the reconciliation surface that
- * will call this. Until then it is invocable but unscheduled.
- */
 export async function processMediaCleanupQueue(limit = 25) {
   const pending = await db
     .select({

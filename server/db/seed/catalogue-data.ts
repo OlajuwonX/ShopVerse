@@ -1,20 +1,3 @@
-/**
- * Catalogue seed data.
- *
- * A hardcoded array is permitted *inside a seed script* and nowhere else
- * (primitives/12-categories-attributes.md). Nothing in the application reads
- * this file — it exists to populate the database once, after which Neon is the
- * only source of truth (MASTER §92).
- *
- * Stage 01's migration inventory determined that all 58 Xquiseat products and
- * 16 categories were food-domain with no ShopVerse counterpart, so none of them
- * were converted. This is a new multi-category catalogue.
- *
- * Prices here are **naira (major units)** for readability; the seeder converts
- * them to kobo. Ratings are 0–5 with one decimal and are converted to the
- * integer 0–500 the schema stores.
- */
-
 export type SeedBrand = { name: string; slug: string };
 
 export type SeedCategory = {
@@ -51,7 +34,7 @@ export type SeedProduct = {
   price: number;
   rating?: number;
   ratingCount?: number;
-  /** Stock for the single default variant, or per variant value in order. */
+
   stock?: number | readonly number[];
   variantAttribute?: string;
   variantValues?: readonly string[];
@@ -85,7 +68,6 @@ export const seedBrands: readonly SeedBrand[] = [
 ];
 
 export const seedCategories: readonly SeedCategory[] = [
-  // Level 0
   { name: "Electronics", slug: "electronics", sortOrder: 1, icon: "tv" },
   { name: "Computing", slug: "computing", sortOrder: 2, icon: "laptop" },
   { name: "Gaming", slug: "gaming", sortOrder: 3, icon: "gamepad-2" },
@@ -95,7 +77,6 @@ export const seedCategories: readonly SeedCategory[] = [
   { name: "Beauty", slug: "beauty", sortOrder: 7, icon: "sparkles" },
   { name: "Sports", slug: "sports", sortOrder: 8, icon: "dumbbell" },
 
-  // Level 1
   {
     name: "Phones & Tablets",
     slug: "phones-tablets",
@@ -151,7 +132,6 @@ export const seedCategories: readonly SeedCategory[] = [
   },
   { name: "Sportswear", slug: "sportswear", parent: "sports", sortOrder: 2 },
 
-  // Level 2 — exercises the three-level hierarchy and descendant inclusion.
   { name: "Smartphones", slug: "smartphones", parent: "phones-tablets", sortOrder: 1 },
   { name: "Tablets", slug: "tablets", parent: "phones-tablets", sortOrder: 2 },
   { name: "Headphones", slug: "headphones", parent: "audio", sortOrder: 1 },
@@ -293,14 +273,6 @@ export const seedAttributes: readonly SeedAttribute[] = [
   },
 ];
 
-/**
- * Category → attribute wiring. Filters are generated from this, never
- * hand-written per page (primitives/12).
- *
- * `colour` is attached to the `electronics` root only, so Smartphones, Tablets,
- * Headphones and Televisions all receive it by **inheritance** — that is the
- * behaviour `getCategoryFilterAttributes()` resolves.
- */
 export const seedCategoryAttributes: Readonly<Record<string, readonly string[]>> = {
   electronics: ["colour"],
   smartphones: ["storage", "ram", "screen-size", "operating-system", "five-g"],
@@ -325,7 +297,6 @@ export const seedCategoryAttributes: Readonly<Record<string, readonly string[]>>
 };
 
 export const seedProducts: readonly SeedProduct[] = [
-  // --- Smartphones ---
   {
     name: "iPhone 15 Pro",
     brand: "apple",
@@ -446,7 +417,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: [6, 0],
   },
 
-  // --- Tablets ---
   {
     name: 'iPad Air 11"',
     brand: "apple",
@@ -479,7 +449,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: [14, 6],
   },
 
-  // --- Headphones ---
   {
     name: "Sony WH-1000XM5",
     brand: "sony",
@@ -522,7 +491,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: [48, 30],
   },
 
-  // --- Televisions ---
   {
     name: 'Hisense 55" 4K UHD Smart TV',
     brand: "hisense",
@@ -561,7 +529,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: 22,
   },
 
-  // --- Laptops ---
   {
     name: 'MacBook Air 13" M3',
     brand: "apple",
@@ -636,7 +603,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: 5,
   },
 
-  // --- Monitors ---
   {
     name: 'Dell UltraSharp 27" 4K',
     brand: "dell",
@@ -663,7 +629,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: 17,
   },
 
-  // --- Computer accessories ---
   {
     name: "Logitech MX Master 3S",
     brand: "logitech",
@@ -706,7 +671,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: [30, 22, 0],
   },
 
-  // --- Consoles ---
   {
     name: "PlayStation 5 Slim",
     brand: "sony",
@@ -751,7 +715,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: 12,
   },
 
-  // --- Gaming accessories ---
   {
     name: "DualSense Wireless Controller",
     brand: "sony",
@@ -780,7 +743,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: [18, 11],
   },
 
-  // --- Men's clothing ---
   {
     name: "Nike Sportswear Club Hoodie",
     brand: "nike",
@@ -825,7 +787,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: [12, 18, 15],
   },
 
-  // --- Women's clothing ---
   {
     name: "Zara Ribbed Knit Midi Dress",
     brand: "zara",
@@ -856,7 +817,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: [10, 24, 28, 17, 5],
   },
 
-  // --- Footwear ---
   {
     name: "Nike Air Force 1 '07",
     brand: "nike",
@@ -901,7 +861,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: [8, 13, 10, 5],
   },
 
-  // --- Office furniture ---
   {
     name: "Ikea Markus Office Chair",
     brand: "ikea",
@@ -955,7 +914,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: 11,
   },
 
-  // --- Living room ---
   {
     name: "Ikea Kivik 3-Seat Sofa",
     brand: "ikea",
@@ -1009,7 +967,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: 0,
   },
 
-  // --- Kitchen appliances ---
   {
     name: "Binatone 1.7L Electric Kettle",
     brand: "binatone",
@@ -1049,7 +1006,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: 8,
   },
 
-  // --- Home care ---
   {
     name: "LG CordZero Stick Vacuum",
     brand: "lg",
@@ -1075,7 +1031,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: 37,
   },
 
-  // --- Skincare ---
   {
     name: "The Ordinary Niacinamide 10% + Zinc 1%",
     brand: "the-ordinary",
@@ -1114,7 +1069,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: 200,
   },
 
-  // --- Fragrance ---
   {
     name: "Nivea Fresh Natural Deodorant",
     brand: "nivea",
@@ -1128,7 +1082,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: 180,
   },
 
-  // --- Fitness equipment ---
   {
     name: "Decathlon Adjustable Dumbbell Set 20kg",
     brand: "decathlon",
@@ -1155,7 +1108,6 @@ export const seedProducts: readonly SeedProduct[] = [
     stock: 64,
   },
 
-  // --- Sportswear ---
   {
     name: "Nike Dri-FIT Training T-Shirt",
     brand: "nike",

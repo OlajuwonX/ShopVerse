@@ -5,13 +5,6 @@ import {
   type ImageRatio,
 } from "@/constants/media";
 
-/**
- * The single place a Cloudinary delivery URL is constructed (primitives/22).
- * No component builds one by hand.
- *
- * Client-safe by design: it reads only the public cloud name, so the same
- * builder serves server components, client components and `srcset` generation.
- */
 function getCloudName() {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
@@ -27,19 +20,12 @@ export type CloudinaryUrlOptions = {
   width: number;
 };
 
-/**
- * `f_auto` and `q_auto` are Cloudinary's automatic format and quality
- * negotiation. This is the project's *only* image optimization pipeline —
- * `next/image` is deliberately not layered on top (MEDIA-05, MASTER §53).
- */
 function buildTransformation({ ratio, width }: CloudinaryUrlOptions) {
   const parts = ["f_auto", "q_auto", `w_${Math.round(width)}`];
 
   if (ratio) {
     const { height: ratioHeight, width: ratioWidth } = IMAGE_RATIOS[ratio];
 
-    // c_fill with a fixed aspect ratio guarantees a consistent presentation box
-    // whatever shape the admin uploaded; g_auto keeps the subject in frame.
     parts.push(`c_fill`, `ar_${ratioWidth}:${ratioHeight}`, "g_auto");
   } else {
     parts.push("c_limit");
@@ -81,10 +67,6 @@ export function buildCloudinarySrcSet(
   return entries.length > 0 ? entries.join(", ") : null;
 }
 
-/**
- * Presentation box for a given ratio at a given rendered width. Always emitted
- * as explicit width/height so the browser reserves space and CLS stays at zero.
- */
 export function getRatioBox(ratio: ImageRatio, width: number) {
   const { height: ratioHeight, width: ratioWidth } = IMAGE_RATIOS[ratio];
 

@@ -1,11 +1,3 @@
-/**
- * Idempotent RBAC seed.
- *
- * Runs outside the Next.js runtime (`pnpm db:seed`), so it deliberately avoids
- * every module that imports `server-only` and builds its own connection from
- * `DATABASE_URL`. Re-running it is safe: permissions and roles are upserted by
- * their unique codes and grants are inserted with conflict-do-nothing.
- */
 import { neon } from "@neondatabase/serverless";
 import { eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -103,11 +95,6 @@ async function seedRoleGrants(
   return grants.length;
 }
 
-/**
- * Creates the first SUPER_ADMIN so the backoffice is reachable at all. Skipped
- * unless both variables are present, and never overwrites an existing account —
- * password rotation is an explicit admin operation, not a seed side effect.
- */
 async function bootstrapSuperAdmin(db: Client, roleIds: Map<string, string>) {
   const email = process.env.SUPER_ADMIN_EMAIL?.trim().toLowerCase();
   const password = process.env.SUPER_ADMIN_PASSWORD;

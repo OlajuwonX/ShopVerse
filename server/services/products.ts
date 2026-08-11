@@ -34,8 +34,7 @@ import {
 } from "@/server/db/schema";
 import { getCategoryAndDescendantIds } from "@/server/services/categories";
 
-/** Upper bound on any price filter, so an absurd range cannot be requested (SRCH-07). */
-export const MAX_PRICE_MINOR_UNITS = 1_000_000_00;
+export const MAX_PRICE_MINOR_UNITS = 10_000_000_000;
 
 export type ProductListItem = {
   basePrice: number;
@@ -59,13 +58,6 @@ export type ProductPage = {
   nextCursor: string | null;
 };
 
-/**
- * The one place a sellable price is decided (primitives/11-products.md).
- *
- * A variant price overrides the product base price when present. Components
- * never re-derive this, so a variant that is free (`0`) stays free rather than
- * being treated as "no override" by a falsy check.
- */
 export function resolveProductPrice(input: {
   basePrice: number;
   comparePrice?: number | null;
@@ -85,38 +77,22 @@ export function resolveProductPrice(input: {
   };
 }
 
-/**
- * Clamps and normalizes a price window before it reaches the query builder.
- * Handles the inverted range (SRCH-06) and the absurd range (SRCH-07).
- */
 export function normalisePriceRange(input: {
   maxPrice?: number | undefined;
   minPrice?: number | undefined;
-}) {
-  const rawMin = Math.max(0, Math.min(input.minPrice ?? 0, MAX_PRICE_MINOR_UNITS));
-  const rawMax = Math.max(
-    0,
-    Math.min(input.maxPrice ?? MAX_PRICE_MINOR_UNITS, MAX_PRICE_MINOR_UNITS),
-  );
+}): { maxPrice: number | null; minPrice: number | null } {
+  const clamp = (value: number) => Math.max(0, Math.min(value, MAX_PRICE_MINOR_UNITS));
 
-  return rawMin > rawMax
-    ? { maxPrice: rawMin, minPrice: rawMax }
-    : { maxPrice: rawMax, minPrice: rawMin };
+  const min = input.minPrice === undefined ? null : clamp(input.minPrice);
+  const max = input.maxPrice === undefined ? null : clamp(input.maxPrice);
+
+  if (min !== null && max !== null && min > max) {
+    return { maxPrice: min, minPrice: max };
+  }
+
+  return { maxPrice: max, minPrice: min };
 }
 
-/**
- * Sort plans.
- *
- * Each plan owns three things that must agree or pagination silently corrupts:
- * the ORDER BY, the keyset predicate, and how a row's cursor value is read.
- * Keeping them in one object makes a mismatch obvious.
- *
- * `products.id` is always the final tiebreaker, so rows sharing a price or
- * timestamp cannot repeat or vanish across pages. The predicate is built with
- * the `sql` tag because the sort columns have different data types and Drizzle's
- * typed comparators cannot resolve against that union; values are still bound as
- * parameters, never interpolated (SRCH-09).
- */
 type SortPlan = {
   keyset: (cursor: CatalogueCursor) => SQL;
   orderBy: SQL;
@@ -124,8 +100,7 @@ type SortPlan = {
 
 function getSortPlan(sort: CatalogueSort): SortPlan {
   const tiebreaker = (cursor: CatalogueCursor) => sql`${products.id} > ${cursor.id}`;
-  // NULL ratings would sort first under Postgres' DESC default, putting unrated
-  // products above rated ones. Coalescing keeps "best rated" honest.
+
   const ratingExpression = sql`coalesce(${products.rating}, 0)`;
 
   switch (sort) {
@@ -162,17 +137,6 @@ function getSortPlan(sort: CatalogueSort): SortPlan {
   }
 }
 
-/**
- * Cursor-paginated catalogue listing (MASTER §20, §61).
- *
- * Every result set is bounded, ordering always includes `products.id` as a
- * tiebreaker so pages cannot repeat or skip rows, and the cursor carries the
- * sort value rather than an offset.
- *
- * Primary image and stock are resolved with correlated subqueries rather than a
- * join plus in-memory grouping, so one product yields exactly one row and the
- * page size is honoured by the database (no N+1, no over-fetch).
- */
 export async function listProducts(query: CatalogueQuery): Promise<ProductPage> {
   const limit = Math.min(query.limit, CATALOGUE_MAX_PAGE_SIZE);
   const { maxPrice, minPrice } = normalisePriceRange({
@@ -180,11 +144,15 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
     ...(query.minPrice === undefined ? {} : { minPrice: query.minPrice }),
   });
 
-  const conditions = [
-    eq(products.status, "active"),
-    gte(products.basePrice, minPrice),
-    lte(products.basePrice, maxPrice),
-  ];
+  const conditions = [eq(products.status, "active")];
+
+  if (minPrice !== null) {
+    conditions.push(gte(products.basePrice, minPrice));
+  }
+
+  if (maxPrice !== null) {
+    conditions.push(lte(products.basePrice, maxPrice));
+  }
 
   if (query.categorySlug) {
     const category = await db
@@ -198,8 +166,6 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
     const categoryId = category[0]?.id;
 
     if (!categoryId) {
-      // A filter pointing at a removed category yields an honest empty page
-      // rather than silently listing the whole catalogue (SRCH-05).
       return { items: [], nextCursor: null };
     }
 
@@ -222,8 +188,6 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
   }
 
   if (query.search) {
-    // Parameterized; the term is never concatenated into SQL (SRCH-09) and is
-    // already length-capped by the schema (SRCH-10).
     conditions.push(sql`${products.name} ilike ${`%${query.search}%`}`);
   }
 
@@ -283,7 +247,7 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
     .innerJoin(categories, eq(products.categoryId, categories.id))
     .where(and(...conditions))
     .orderBy(plan.orderBy)
-    // One extra row tells us whether another page exists without a count query.
+
     .limit(limit + 1);
 
   const hasMore = rows.length > limit;
@@ -303,8 +267,7 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
     name: row.name,
     rating: row.rating,
     ratingCount: row.ratingCount,
-    // More than one active variant means the customer must choose before
-    // adding to cart — no quick add (primitives/11-products.md).
+
     requiresSelection: row.variantCount > 1,
     slug: row.slug,
   })) satisfies ProductListItem[];
@@ -371,10 +334,6 @@ export type ProductDetail = {
   }[];
 };
 
-/**
- * Product detail by public slug. Only `active` products are returned — a draft
- * or archived product is indistinguishable from one that never existed.
- */
 export async function getProductBySlug(slug: string): Promise<ProductDetail | null> {
   const rows = await db
     .select({

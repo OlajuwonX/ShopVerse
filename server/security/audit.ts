@@ -16,16 +16,6 @@ type AuditEventInput = {
   targetType: string;
 };
 
-/**
- * Append-only audit trail (MASTER §49, primitives/30-audit-logging.md).
- *
- * Only correlation identifiers and explicit before/after payloads are stored.
- * Callers must never pass passwords, tokens, session ids or card data — the
- * `before`/`after` values are written verbatim.
- *
- * Auditing must never break the operation it records, so write failures are
- * swallowed after being reported to the server log.
- */
 export async function writeAuditLog(event: AuditEventInput) {
   try {
     const context = await getRequestContext();

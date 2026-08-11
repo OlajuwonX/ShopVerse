@@ -38,13 +38,6 @@ function hasAscii(bytes: Uint8Array, offset: number, text: string) {
   );
 }
 
-/**
- * Identifies the real format from the file's magic bytes.
- *
- * The browser-supplied `Content-Type` and the filename extension are both
- * attacker-controlled, so neither is used to decide what a file *is* — they are
- * only checked for consistency against this result (SEC-08, SEC-10).
- */
 export function detectImageType(bytes: Uint8Array): AllowedImageMimeType | null {
   if (hasBytes(bytes, 0, [0xff, 0xd8, 0xff])) {
     return "image/jpeg";
@@ -58,7 +51,6 @@ export function detectImageType(bytes: Uint8Array): AllowedImageMimeType | null 
     return "image/webp";
   }
 
-  // ISO-BMFF container: `ftyp` box at offset 4, brand at offset 8.
   if (
     hasAscii(bytes, 4, "ftyp") &&
     (hasAscii(bytes, 8, "avif") || hasAscii(bytes, 8, "avis"))
@@ -75,12 +67,6 @@ function extensionOf(fileName: string) {
   return parts.length > 1 ? (parts.at(-1) ?? "") : "";
 }
 
-/**
- * Everything checkable before the bytes leave our server: size cap, real
- * format, and extension consistency. Dimensions are verified afterwards from
- * Cloudinary's authoritative response, since deriving them here would mean
- * hand-parsing four container formats.
- */
 export function validateImageUpload(input: {
   bytes: Uint8Array;
   declaredType: string;
@@ -104,8 +90,6 @@ export function validateImageUpload(input: {
     return { ok: false, reason: "unsupported_type" };
   }
 
-  // A mismatch is not automatically an attack — but accepting it would let a
-  // file be stored under a name that misrepresents its contents.
   const extension = extensionOf(input.fileName);
 
   if (extension && !ALLOWED_IMAGE_EXTENSIONS[detectedType].includes(extension)) {

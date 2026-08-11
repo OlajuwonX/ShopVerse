@@ -76,11 +76,6 @@ export const roleDefinitions: Record<RoleCode, { description: string; name: stri
     },
   };
 
-/**
- * Baseline role → permission grants. `CUSTOM` intentionally starts empty and is
- * driven entirely by per-staff overrides. Roles remain database rows, editable
- * under `roles.update`; this map only seeds their initial state.
- */
 export const roleDefaultPermissions: Record<RoleCode, readonly Permission[]> = {
   SUPER_ADMIN: permissions,
   STORE_MANAGER: [

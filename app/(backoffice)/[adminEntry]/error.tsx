@@ -10,13 +10,6 @@ type AdminErrorProps = {
   reset: () => void;
 };
 
-/**
- * Admin errors may carry a diagnostic reference (MASTER §65) — `digest` is the
- * server-generated correlation id, not the underlying message, so nothing
- * sensitive reaches the browser. Permission denials never land here: they are
- * converted to 404s in `server/auth/guards.ts` so that refused and non-existent
- * look identical.
- */
 export default function AdminError({ error, reset }: AdminErrorProps) {
   useEffect(() => {
     console.error("admin_route_error", { digest: error.digest });
