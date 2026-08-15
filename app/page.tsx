@@ -9,14 +9,15 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { catalogueQuerySchema } from "@/features/products/schemas/catalogue-query";
 import {
-  getCategoryBySlug,
-  getCategoryFilterAttributes,
-  getCategoryTree,
-  type CategoryNode,
-} from "@/server/services/categories";
-import { listProducts, type ProductListItem } from "@/server/services/products";
+  getCachedCategoryBySlug,
+  getCachedCategoryFilterAttributes,
+  getCachedCategoryTree,
+  getCachedProductPage,
+} from "@/server/cache/catalogue";
+import type { CategoryNode } from "@/server/services/categories";
+import type { ProductListItem } from "@/server/services/products";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const PREVIEW_CATEGORY = "smartphones";
 
@@ -91,12 +92,12 @@ function ProductPreviewCard({ product }: { product: ProductListItem }) {
 
 async function loadPreview() {
   const [tree, page, category] = await Promise.all([
-    getCategoryTree(),
-    listProducts(catalogueQuerySchema.parse({ limit: 24, sort: "popularity" })),
-    getCategoryBySlug(PREVIEW_CATEGORY),
+    getCachedCategoryTree(),
+    getCachedProductPage(catalogueQuerySchema.parse({ limit: 24, sort: "popularity" })),
+    getCachedCategoryBySlug(PREVIEW_CATEGORY),
   ]);
 
-  const filters = category ? await getCategoryFilterAttributes(category.id) : [];
+  const filters = category ? await getCachedCategoryFilterAttributes(category.id) : [];
 
   return { category, filters, page, tree };
 }

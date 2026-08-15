@@ -1,6 +1,7 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
+import { cache } from "react";
 
 import { permissions, type Permission } from "@/constants/permissions";
 import { requireStaffSession } from "@/server/auth/sessions";
@@ -84,7 +85,7 @@ export async function resolveStaffPermissions(staffAccountId: string) {
   return resolved;
 }
 
-export async function getCurrentStaffActor() {
+export const getCurrentStaffActor = cache(async () => {
   const session = await requireStaffSession();
 
   if (!session?.staffAccountId) {
@@ -99,7 +100,7 @@ export async function getCurrentStaffActor() {
     permissions: resolvedPermissions,
     staffAccountId: session.staffAccountId,
   } satisfies StaffActor;
-}
+});
 
 export function hasPermission(
   actor: Pick<StaffActor, "permissions"> | null | undefined,
