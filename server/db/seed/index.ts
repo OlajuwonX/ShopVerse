@@ -1,4 +1,5 @@
 import { seedCatalogue } from "@/server/db/seed/catalogue";
+import { seedMerchandising } from "@/server/db/seed/merchandising";
 import { seedRbac } from "@/server/db/seed/rbac";
 
 async function main() {
@@ -18,6 +19,10 @@ async function main() {
   console.info(
     "no product images were seeded — products render the CloudinaryImage placeholder until real assets are uploaded",
   );
+
+  const merchandising = await seedMerchandising();
+
+  console.info("merchandising seed complete", merchandising);
 }
 
 main().catch((error: unknown) => {
