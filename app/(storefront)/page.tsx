@@ -109,32 +109,31 @@ export default async function CataloguePreviewPage() {
     data = await loadPreview();
   } catch {
     return (
-      <main className="mx-auto grid w-full max-w-(--page-max) gap-6 px-(--page-gutter) py-10">
+      <div className="mx-auto grid w-full max-w-(--page-max) gap-6 px-(--page-gutter) py-10">
         <ErrorState
           description="The catalogue could not be loaded. Check DATABASE_URL, then run `pnpm db:migrate` and `pnpm db:seed`."
           title="No catalogue data"
         />
-      </main>
+      </div>
     );
   }
 
   const { category, filters, page, tree } = data;
 
   return (
-    <main className="mx-auto grid w-full max-w-(--page-max) gap-8 px-(--page-gutter) py-8">
+    <div className="mx-auto grid w-full max-w-(--page-max) gap-8 px-(--page-gutter) py-8">
       <div className="flex items-start gap-3 rounded-lg border border-warning bg-warning-soft p-4">
         <AlertTriangle
           aria-hidden="true"
           className="mt-0.5 size-5 shrink-0 text-warning"
         />
         <div className="grid gap-1">
-          <p className="text-label font-semibold text-text">
+          <h1 className="text-label font-semibold text-text">
             Development catalogue preview
-          </p>
+          </h1>
           <p className="text-body-sm text-text-muted">
-            Rendered live from Neon through the Stage 14 services. This is not the
-            storefront — navigation arrives at Stage 16 and the real homepage at Stage
-            17, which replaces this page.
+            Rendered through the Stage 15 cache layer. Navigation arrived in Stage 16;
+            the real homepage arrives in Stage 17, which replaces this page.
           </p>
         </div>
       </div>
@@ -217,6 +216,6 @@ export default async function CataloguePreviewPage() {
             : null}
         </p>
       </section>
-    </main>
+    </div>
   );
 }
