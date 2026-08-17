@@ -1,5 +1,7 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 
+import shopverseMark from "@/public/logo/shopverse-mark.webp";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { Button } from "@/components/ui/Button";
@@ -25,6 +27,14 @@ export function AdminShell({
       <header className="sticky top-0 z-header border-b border-border bg-surface-raised">
         <div className="flex items-center gap-3 px-(--page-gutter) py-3">
           <AdminMobileNav adminRoot={adminRoot} permissions={permissions} />
+
+          <Image
+            alt=""
+            className="size-8 shrink-0"
+            height={32}
+            src={shopverseMark}
+            width={32}
+          />
 
           <div className="flex min-w-0 flex-col">
             <span className="text-label font-bold text-text">ShopVerse</span>

@@ -1,5 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+
+import shopverseMark from "@/public/logo/shopverse-mark.webp";
 
 import { DirectionalHeader } from "@/components/navigation/DirectionalHeader";
 import { HeaderActions } from "@/components/navigation/HeaderActions";
@@ -22,10 +25,20 @@ export default function StorefrontLayout({ children }: StorefrontLayoutProps) {
           <StorefrontMenu />
 
           <Link
-            className="text-heading-3 font-bold tracking-tight text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="flex shrink-0 items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             href="/"
           >
-            ShopVerse
+            <Image
+              alt=""
+              className="size-9 shrink-0"
+              height={36}
+              priority
+              src={shopverseMark}
+              width={36}
+            />
+            <span className="text-heading-3 font-bold tracking-tight text-text">
+              ShopVerse
+            </span>
           </Link>
 
           <SearchInput className="order-last w-full md:order-none md:mx-2 md:max-w-2xl md:flex-1" />
