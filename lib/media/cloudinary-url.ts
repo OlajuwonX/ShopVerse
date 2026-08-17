@@ -42,7 +42,15 @@ export function buildCloudinaryUrl(publicId: string, options: CloudinaryUrlOptio
   }
 
   const transformation = buildTransformation(options);
-  const encodedPublicId = publicId.split("/").map(encodeURIComponent).join("/");
+  const encodedPublicId = publicId
+    .split("/")
+    .filter((segment) => segment.length > 0 && segment !== "." && segment !== "..")
+    .map(encodeURIComponent)
+    .join("/");
+
+  if (encodedPublicId.length === 0) {
+    return null;
+  }
 
   return `${CLOUDINARY_DELIVERY_ORIGIN}/${cloudName}/image/upload/${transformation}/${encodedPublicId}`;
 }

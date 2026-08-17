@@ -58,11 +58,11 @@
   --shadow-raised: 0 8px 24px rgb(23 23 23 / 0.1);
   --shadow-overlay: 0 24px 60px rgb(23 23 23 / 0.2);
 
-  --z-header: 40;
-  --z-sticky: 45;
-  --z-drawer: 50;
-  --z-dialog: 60;
-  --z-toast: 70;
+  --z-index-header: 40;
+  --z-index-sticky: 45;
+  --z-index-drawer: 50;
+  --z-index-dialog: 60;
+  --z-index-toast: 70;
 
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-emphasized: cubic-bezier(0.2, 0, 0, 1.2);
