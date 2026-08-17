@@ -1,36 +1,13 @@
 import Link from "next/link";
 
-import { SectionProductCard } from "@/components/storefront/SectionProductCard";
+import { ProductCard } from "@/components/commerce/ProductCard";
+import { ProductRail } from "@/components/commerce/ProductRail";
 import { SectionShell } from "@/components/storefront/SectionShell";
 import { CloudinaryImage } from "@/components/ui/CloudinaryImage";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { cn } from "@/lib/cn";
 import type { ResolvedSection } from "@/server/cache/storefront";
 import type { ProductListItem } from "@/server/services/products";
-
-const RAIL_ITEM_CLASS = "w-[44vw] shrink-0 snap-start sm:w-[30vw] lg:w-[19vw]";
-
-function ProductRail({
-  isAboveFold,
-  products,
-}: {
-  isAboveFold: boolean;
-  products: ProductListItem[];
-}) {
-  return (
-    <ul className="-mx-(--page-gutter) flex snap-x snap-mandatory gap-3 overflow-x-auto px-(--page-gutter) pb-2">
-      {products.map((product, index) => (
-        <li className={RAIL_ITEM_CLASS} key={product.id}>
-          <SectionProductCard
-            priority={isAboveFold && index < 3}
-            product={product}
-            sizes="(min-width: 1024px) 19vw, (min-width: 640px) 30vw, 44vw"
-          />
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 const gridColumnClasses: Record<number, string> = {
   2: "lg:grid-cols-2",
@@ -58,7 +35,7 @@ function ProductGrid({
     >
       {products.map((product, index) => (
         <li key={product.id}>
-          <SectionProductCard priority={isAboveFold && index < 4} product={product} />
+          <ProductCard priority={isAboveFold && index < 4} product={product} />
         </li>
       ))}
     </ul>
@@ -197,7 +174,11 @@ export function SectionRenderer({
           products={payload.items}
         />
       ) : (
-        <ProductRail isAboveFold={isAboveFold} products={payload.items} />
+        <ProductRail
+          isAboveFold={isAboveFold}
+          label={section.title}
+          products={payload.items}
+        />
       )}
     </SectionShell>
   );

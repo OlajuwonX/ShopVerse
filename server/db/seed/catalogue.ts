@@ -214,9 +214,8 @@ async function seedCategoryAttributeRows(
   return rows.length;
 }
 
-async function resolveProductSlugs(db: Client) {
-  const existing = await db.select({ slug: products.slug }).from(products);
-  const taken = new Set(existing.map((row) => row.slug));
+function resolveProductSlugs() {
+  const taken = new Set<string>();
   const bySeedName = new Map<string, string>();
 
   for (const product of seedProducts) {
@@ -258,7 +257,7 @@ async function seedProductRows(
     optionIds: Map<string, string>;
   },
 ) {
-  const slugByName = await resolveProductSlugs(db);
+  const slugByName = resolveProductSlugs();
 
   const attributeTypes = new Map(
     seedAttributes.map((attribute) => [attribute.slug, attribute.type]),
