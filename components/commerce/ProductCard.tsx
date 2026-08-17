@@ -7,16 +7,13 @@ import { Badge } from "@/components/ui/Badge";
 import { CloudinaryImage } from "@/components/ui/CloudinaryImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/cn";
+import { productHref } from "@/lib/routes";
 import type { ProductListItem } from "@/server/services/products";
 
 export const PRODUCT_CARD_SIZES = {
   grid: "(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 45vw",
   rail: "(min-width: 1024px) 19vw, (min-width: 640px) 30vw, 44vw",
 } as const;
-
-export function productHref(slug: string) {
-  return `/products/${slug}`;
-}
 
 type ProductCardProps = {
   className?: string;
