@@ -145,3 +145,56 @@ describe("canonicaliseCatalogueQuery", () => {
     expect(keyOf(trending)).toBe(keyOf(recommended));
   });
 });
+
+describe("attribute filters in the cache key", () => {
+  function keyOf(query: Parameters<typeof canonicaliseCatalogueQuery>[0]) {
+    return JSON.stringify(canonicaliseCatalogueQuery(query));
+  }
+
+  it("keeps different attribute selections on different cache entries", () => {
+    const storage256 = catalogueQuerySchema.parse({
+      attributes: { storage: ["256gb"] },
+    });
+    const storage512 = catalogueQuerySchema.parse({
+      attributes: { storage: ["512gb"] },
+    });
+
+    expect(keyOf(storage256)).not.toBe(keyOf(storage512));
+  });
+
+  it("keeps a filtered query distinct from an unfiltered one", () => {
+    const filtered = catalogueQuerySchema.parse({ attributes: { colour: ["black"] } });
+    const plain = catalogueQuerySchema.parse({});
+
+    expect(keyOf(filtered)).not.toBe(keyOf(plain));
+  });
+
+  it("collapses attribute value order and casing", () => {
+    const a = catalogueQuerySchema.parse({
+      attributes: { storage: ["512GB", "256gb"] },
+    });
+    const b = catalogueQuerySchema.parse({
+      attributes: { storage: ["256gb", "512gb"] },
+    });
+
+    expect(keyOf(a)).toBe(keyOf(b));
+  });
+
+  it("collapses attribute key order", () => {
+    const a = catalogueQuerySchema.parse({
+      attributes: { colour: ["black"], storage: ["256gb"] },
+    });
+    const b = catalogueQuerySchema.parse({
+      attributes: { storage: ["256gb"], colour: ["black"] },
+    });
+
+    expect(keyOf(a)).toBe(keyOf(b));
+  });
+
+  it("distinguishes the same value under different attributes", () => {
+    const a = catalogueQuerySchema.parse({ attributes: { colour: ["black"] } });
+    const b = catalogueQuerySchema.parse({ attributes: { finish: ["black"] } });
+
+    expect(keyOf(a)).not.toBe(keyOf(b));
+  });
+});

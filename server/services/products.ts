@@ -25,16 +25,20 @@ import {
 import { discountPercent } from "@/lib/money";
 import { db } from "@/server/db";
 import {
+  attributeOptions,
+  attributes as attributesTable,
   brands,
   categories,
   inventory,
+  productAttributeValues,
   productImages,
   productVariants,
   products,
 } from "@/server/db/schema";
 import { getCategoryAndDescendantIds } from "@/server/services/categories";
 
-export const MAX_PRICE_MINOR_UNITS = 10_000_000_000;
+export const POSTGRES_INTEGER_MAX = 2_147_483_647;
+export const MAX_PRICE_MINOR_UNITS = POSTGRES_INTEGER_MAX;
 
 export type ProductListItem = {
   basePrice: number;
@@ -56,6 +60,7 @@ export type ProductListItem = {
 export type ProductPage = {
   items: ProductListItem[];
   nextCursor: string | null;
+  totalCount: number;
 };
 
 export function resolveProductPrice(input: {
@@ -137,6 +142,40 @@ function getSortPlan(sort: CatalogueSort): SortPlan {
   }
 }
 
+function attributeConditions(attributes: CatalogueQuery["attributes"]) {
+  if (!attributes) {
+    return [];
+  }
+
+  return Object.entries(attributes)
+    .filter(([, values]) => values.length > 0)
+    .map(([slug, values]) => {
+      const wanted = sql.join(
+        values.map((entry) => sql`${entry.toLowerCase()}`),
+        sql`, `,
+      );
+
+      return sql`(
+          exists (
+            select 1
+            from ${productAttributeValues} pav
+            join ${attributesTable} attr on attr.id = pav.attribute_id
+            join ${attributeOptions} opt on opt.id = pav.option_id
+            where pav.product_id = ${products.id}
+              and attr.slug = ${slug}
+              and lower(opt.value) in (${wanted})
+          )
+          or exists (
+            select 1
+            from ${productVariants} pv
+            where pv.product_id = ${products.id}
+              and pv.status = 'active'
+              and lower(pv.option_values ->> ${slug}) in (${wanted})
+          )
+        )`;
+    });
+}
+
 export async function listProducts(query: CatalogueQuery): Promise<ProductPage> {
   const limit = Math.min(query.limit, CATALOGUE_MAX_PAGE_SIZE);
   const { maxPrice, minPrice } = normalisePriceRange({
@@ -166,7 +205,7 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
     const categoryId = category[0]?.id;
 
     if (!categoryId) {
-      return { items: [], nextCursor: null };
+      return { items: [], nextCursor: null, totalCount: 0 };
     }
 
     const categoryIds = await getCategoryAndDescendantIds(categoryId);
@@ -191,6 +230,8 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
     conditions.push(sql`${products.name} ilike ${`%${query.search}%`}`);
   }
 
+  conditions.push(...attributeConditions(query.attributes));
+
   const inStockExpression = sql<boolean>`exists (
     select 1
     from ${productVariants} variant
@@ -204,6 +245,8 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
     conditions.push(inStockExpression);
   }
 
+  const filterConditions = [...conditions];
+
   const plan = getSortPlan(query.sort);
   const cursor = decodeCursor(query.cursor);
 
@@ -211,7 +254,14 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
     conditions.push(plan.keyset(cursor));
   }
 
-  const rows = await db
+  const countQuery = db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(products)
+    .innerJoin(brands, eq(products.brandId, brands.id))
+    .innerJoin(categories, eq(products.categoryId, categories.id))
+    .where(and(...filterConditions));
+
+  const rowsQuery = db
     .select({
       basePrice: products.basePrice,
       brandName: brands.name,
@@ -247,8 +297,9 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
     .innerJoin(categories, eq(products.categoryId, categories.id))
     .where(and(...conditions))
     .orderBy(plan.orderBy)
-
     .limit(limit + 1);
+
+  const [rows, countRows] = await Promise.all([rowsQuery, countQuery]);
 
   const hasMore = rows.length > limit;
   const page = hasMore ? rows.slice(0, limit) : rows;
@@ -298,6 +349,7 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
       hasMore && last && cursorValue !== null
         ? encodeCursor({ id: last.id, value: cursorValue })
         : null,
+    totalCount: countRows[0]?.total ?? 0,
   };
 }
 

@@ -39,7 +39,14 @@ export function decodeCursor(raw: string | null | undefined): CatalogueCursor | 
   }
 }
 
+export const attributeFilterSchema = z
+  .record(z.string().min(1).max(96), z.array(z.string().min(1).max(96)).min(1).max(20))
+  .refine((value) => Object.keys(value).length <= 12, {
+    message: "Too many attribute filters",
+  });
+
 export const catalogueQuerySchema = z.object({
+  attributes: attributeFilterSchema.optional(),
   brandSlugs: z.array(z.string().min(1).max(96)).max(20).optional(),
   categorySlug: z.string().min(1).max(96).optional(),
   cursor: z.string().max(512).nullish(),

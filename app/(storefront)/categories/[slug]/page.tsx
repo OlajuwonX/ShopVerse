@@ -2,25 +2,38 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ProductGrid } from "@/components/commerce/ProductGrid";
+import { AppliedFilters } from "@/components/filters/AppliedFilters";
+import {
+  CatalogueFilters,
+  type FilterFacets,
+} from "@/components/filters/CatalogueFilters";
+import { FilterSheet } from "@/components/filters/FilterSheet";
+import { ResultCount } from "@/components/filters/ResultCount";
+import { SortSelect } from "@/components/filters/SortSelect";
 import { CategoryRail } from "@/components/navigation/CategoryRail";
 import { CategorySidebar } from "@/components/navigation/CategorySidebar";
 import { buildBreadcrumbJsonLd, JsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { serverEnv } from "@/config/env";
-import { catalogueQuerySchema } from "@/features/products/schemas/catalogue-query";
 import { buildCategoryBreadcrumbs } from "@/features/categories/navigation";
+import { parseCatalogueFilters } from "@/features/filters/catalogue-url";
+import { catalogueQuerySchema } from "@/features/products/schemas/catalogue-query";
 import { categoryHref } from "@/lib/routes";
 import {
+  getCachedBrandsForCategory,
   getCachedCategoryAncestors,
   getCachedCategoryBySlug,
+  getCachedCategoryFilterAttributes,
   getCachedCategoryTree,
   getCachedProductPage,
 } from "@/server/cache/catalogue";
+import { MAX_PRICE_MINOR_UNITS } from "@/server/services/products";
 
 export const revalidate = 60;
 
 const CATEGORY_PAGE_SIZE = 24;
+const PRICE_CEILING = 5_000_000_00;
 
 export async function generateMetadata({
   params,
@@ -47,27 +60,71 @@ export async function generateMetadata({
 
 export default async function CategoryPage({
   params,
+  searchParams,
 }: PageProps<"/categories/[slug]">) {
-  const { slug } = await params;
+  const [{ slug }, rawSearchParams] = await Promise.all([params, searchParams]);
   const category = await getCachedCategoryBySlug(slug);
 
   if (!category) {
     notFound();
   }
 
-  const [ancestors, tree, page] = await Promise.all([
+  const urlParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(rawSearchParams)) {
+    for (const entry of Array.isArray(value) ? value : [value]) {
+      if (typeof entry === "string") {
+        urlParams.append(key, entry);
+      }
+    }
+  }
+
+  const filters = parseCatalogueFilters(urlParams);
+
+  const [ancestors, tree, brands, attributes] = await Promise.all([
     getCachedCategoryAncestors(category.id),
     getCachedCategoryTree(),
-    getCachedProductPage(
-      catalogueQuerySchema.parse({
-        categorySlug: category.slug,
-        limit: CATEGORY_PAGE_SIZE,
-        sort: "popularity",
-      }),
-    ),
+    getCachedBrandsForCategory(category.slug),
+    getCachedCategoryFilterAttributes(category.id),
   ]);
 
+  const knownBrands = new Set(brands.map((brand) => brand.slug));
+  const appliedBrands = filters.brandSlugs.filter((entry) => knownBrands.has(entry));
+  const droppedBrands = filters.brandSlugs.length - appliedBrands.length;
+
+  const page = await getCachedProductPage(
+    catalogueQuerySchema.parse({
+      ...(Object.keys(filters.attributes).length > 0
+        ? { attributes: filters.attributes }
+        : {}),
+      ...(appliedBrands.length > 0 ? { brandSlugs: appliedBrands } : {}),
+      categorySlug: category.slug,
+      ...(filters.inStockOnly ? { inStockOnly: true } : {}),
+      limit: CATEGORY_PAGE_SIZE,
+      ...(filters.maxPrice === null ? {} : { maxPrice: filters.maxPrice }),
+      ...(filters.minPrice === null ? {} : { minPrice: filters.minPrice }),
+      ...(filters.minRating === null ? {} : { minRating: filters.minRating }),
+      ...(filters.onSaleOnly ? { onSaleOnly: true } : {}),
+      sort: filters.sort,
+    }),
+  );
+
   const breadcrumbs = buildCategoryBreadcrumbs(ancestors, categoryHref);
+  const brandNames = Object.fromEntries(
+    brands.map((brand) => [brand.slug, brand.name]),
+  );
+
+  const facets: FilterFacets = {
+    attributes: attributes.map((attribute) => ({
+      id: attribute.id,
+      name: attribute.name,
+      options: attribute.options,
+      slug: attribute.slug,
+      unit: attribute.unit,
+    })),
+    brands,
+    priceCeiling: Math.min(PRICE_CEILING, MAX_PRICE_MINOR_UNITS),
+  };
 
   return (
     <div className="mx-auto w-full max-w-(--page-max) px-(--page-gutter) py-6">
@@ -78,24 +135,43 @@ export default async function CategoryPage({
       <CategoryRail activeSlug={category.slug} className="mb-6 lg:hidden" tree={tree} />
 
       <div className="flex gap-8">
-        <aside className="hidden w-60 shrink-0 lg:block">
-          <div className="sticky top-32">
+        <aside className="hidden w-64 shrink-0 lg:block">
+          <div className="sticky top-32 grid gap-6">
             <CategorySidebar activeSlug={category.slug} tree={tree} />
+            <CatalogueFilters facets={facets} />
           </div>
         </aside>
 
         <div className="min-w-0 flex-1">
-          <header className="mb-4 grid gap-1">
+          <header className="mb-4 grid gap-2">
             <h1 className="text-heading-2 font-bold text-text">{category.name}</h1>
             {category.description ? (
               <p className="text-body-sm text-text-muted">{category.description}</p>
             ) : null}
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <ResultCount context={category.name} total={page.totalCount} />
+              <div className="flex items-center gap-3">
+                <FilterSheet facets={facets} />
+                <SortSelect />
+              </div>
+            </div>
+
+            {droppedBrands > 0 ? (
+              <p className="text-caption text-warning">
+                {droppedBrands} brand filter{droppedBrands === 1 ? "" : "s"} no longer
+                apply to this category and {droppedBrands === 1 ? "was" : "were"}{" "}
+                ignored.
+              </p>
+            ) : null}
+
+            <AppliedFilters brandNames={brandNames} />
           </header>
 
           {page.items.length === 0 ? (
             <EmptyState
-              description="Nothing is listed in this category yet. Browse the rest of the store while it fills up."
-              title="No products here yet"
+              description="No products match these filters. Clearing them will show the full category."
+              title="No products found"
             />
           ) : (
             <ProductGrid
@@ -107,8 +183,8 @@ export default async function CategoryPage({
 
           {page.nextCursor ? (
             <p className="mt-6 text-caption text-text-subtle">
-              More products are available in this category; continuous browsing arrives
-              in Stage 22.
+              Showing the first {page.items.length} of {page.totalCount}; continuous
+              browsing arrives in Stage 22.
             </p>
           ) : null}
         </div>

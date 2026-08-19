@@ -34,7 +34,22 @@ export function canonicaliseCatalogueQuery(query: CatalogueQuery): CatalogueQuer
 
   const search = query.search?.trim().toLowerCase();
 
+  const attributeEntries = Object.entries(query.attributes ?? {})
+    .map(
+      ([slug, values]) =>
+        [
+          slug.toLowerCase(),
+          [...new Set(values.map((v) => v.toLowerCase()))].sort(),
+        ] as const,
+    )
+    .filter(([, values]) => values.length > 0)
+    .sort(([a], [b]) => a.localeCompare(b));
+
+  const attributes =
+    attributeEntries.length > 0 ? Object.fromEntries(attributeEntries) : undefined;
+
   return {
+    ...(attributes ? { attributes } : {}),
     ...(brandSlugs ? { brandSlugs } : {}),
     ...(query.categorySlug ? { categorySlug: query.categorySlug } : {}),
     ...(query.cursor ? { cursor: query.cursor } : {}),

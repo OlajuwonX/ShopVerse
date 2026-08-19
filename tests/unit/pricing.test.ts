@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_PRICE_MINOR_UNITS,
   normalisePriceRange,
+  POSTGRES_INTEGER_MAX,
   resolveProductPrice,
 } from "@/server/services/products";
 
@@ -89,5 +90,20 @@ describe("normalisePriceRange", () => {
 
   it("keeps the ceiling above the price slider range described in MASTER §8", () => {
     expect(MAX_PRICE_MINOR_UNITS).toBeGreaterThan(2_000_000 * 100);
+  });
+
+  it("never clamps to a value the price column cannot hold (SRCH-07 regression)", () => {
+    expect(MAX_PRICE_MINOR_UNITS).toBeLessThanOrEqual(POSTGRES_INTEGER_MAX);
+
+    const range = normalisePriceRange({ minPrice: 10 ** 12 });
+
+    expect(range.minPrice).toBeLessThanOrEqual(POSTGRES_INTEGER_MAX);
+  });
+
+  it("clamps both edges below the column ceiling for absurd input", () => {
+    const range = normalisePriceRange({ maxPrice: 10 ** 15, minPrice: 10 ** 14 });
+
+    expect(range.minPrice).toBeLessThanOrEqual(POSTGRES_INTEGER_MAX);
+    expect(range.maxPrice).toBeLessThanOrEqual(POSTGRES_INTEGER_MAX);
   });
 });
