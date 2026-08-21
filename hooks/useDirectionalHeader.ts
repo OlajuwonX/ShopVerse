@@ -4,8 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export type HeaderState = "compact" | "full" | "hidden";
 
+export const APP_SCROLL_ID = "app-scroll";
+
 const FULL_HEADER_MAX_Y = 96;
 const DIRECTION_THRESHOLD_PX = 8;
+
+function isScrollable(element: HTMLElement | null): element is HTMLElement {
+  return element !== null && element.scrollHeight > element.clientHeight + 1;
+}
 
 export function useDirectionalHeader() {
   const [state, setState] = useState<HeaderState>("full");
@@ -29,12 +35,18 @@ export function useDirectionalHeader() {
   }, [apply]);
 
   useEffect(() => {
-    lastYRef.current = window.scrollY;
+    const container = document.getElementById(APP_SCROLL_ID);
+
+    function currentOffset() {
+      return isScrollable(container) ? container.scrollTop : window.scrollY;
+    }
+
+    lastYRef.current = currentOffset();
 
     function measure() {
       frameRef.current = 0;
 
-      const y = window.scrollY;
+      const y = currentOffset();
       const delta = y - lastYRef.current;
 
       if (y <= FULL_HEADER_MAX_Y) {
@@ -59,10 +71,12 @@ export function useDirectionalHeader() {
     }
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    container?.addEventListener("scroll", handleScroll, { passive: true });
     measure();
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      container?.removeEventListener("scroll", handleScroll);
 
       if (frameRef.current !== 0) {
         window.cancelAnimationFrame(frameRef.current);

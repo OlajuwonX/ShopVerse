@@ -9,6 +9,7 @@ import { HeaderActions } from "@/components/navigation/HeaderActions";
 import { MAIN_CONTENT_ID, SkipLink } from "@/components/navigation/SkipLink";
 import { StorefrontMenu } from "@/components/navigation/StorefrontMenu";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { APP_SCROLL_ID } from "@/hooks/useDirectionalHeader";
 
 type StorefrontLayoutProps = {
   children: ReactNode;
@@ -17,16 +18,17 @@ type StorefrontLayoutProps = {
 
 export default function StorefrontLayout({ children, sidebar }: StorefrontLayoutProps) {
   return (
-    <div className="min-h-screen bg-surface lg:flex lg:items-start">
+    <div className="min-h-screen bg-surface lg:flex lg:h-screen lg:min-h-0 lg:overflow-hidden">
       <SkipLink />
 
-      <aside className="hidden w-72 shrink-0 lg:block">
-        <div className="sticky top-0 h-screen overflow-y-auto border-r border-border px-3 py-6">
-          {sidebar}
-        </div>
+      <aside className="hidden w-72 shrink-0 border-r border-border lg:block lg:h-screen lg:overflow-y-auto lg:overscroll-contain">
+        <div className="px-3 py-6">{sidebar}</div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div
+        className="flex min-w-0 flex-1 flex-col lg:h-screen lg:overflow-y-auto lg:overscroll-contain"
+        id={APP_SCROLL_ID}
+      >
         <DirectionalHeader>
           <div className="mx-auto flex w-full max-w-(--content-max) flex-wrap items-center gap-x-3 gap-y-2 px-(--page-gutter) py-2 md:py-3">
             <StorefrontMenu />

@@ -28,7 +28,11 @@ test.describe("header layout", () => {
 
       const actions = page.getByRole("button", { name: /account, available soon/i });
       const actionsBox = await actions.boundingBox();
-      const rowBox = await page.locator("header > div").first().boundingBox();
+      const rowBox = await page
+        .getByRole("banner")
+        .locator("> div")
+        .first()
+        .boundingBox();
 
       expect(actionsBox, `actions at ${width}px`).not.toBeNull();
       expect(rowBox).not.toBeNull();
@@ -98,7 +102,7 @@ test.describe("header layout", () => {
       page.getByRole("navigation", { name: "Product discovery" }),
     ).toHaveCount(0);
 
-    await expect(page.locator("header").getByRole("search")).toBeVisible();
+    await expect(page.getByRole("banner").getByRole("search")).toBeVisible();
   });
 
   test("discovery links live in the sidebar", async ({ page }, testInfo) => {
@@ -119,8 +123,14 @@ test.describe("header layout", () => {
 
     await page.goto("/");
 
-    const header = page.locator("header");
+    const header = page.getByRole("banner");
     await expect(header).toHaveAttribute("data-state", "full");
+
+    const viewport = page.viewportSize();
+    await page.mouse.move(
+      (viewport?.width ?? 1440) - 200,
+      (viewport?.height ?? 900) / 2,
+    );
 
     await page.mouse.wheel(0, 1200);
     await expect(header).toHaveAttribute("data-state", "hidden");
@@ -130,5 +140,121 @@ test.describe("header layout", () => {
 
     await page.mouse.wheel(0, -2000);
     await expect(header).toHaveAttribute("data-state", "full");
+  });
+});
+
+test.describe("independent scroll regions", () => {
+  test("the content pane and sidebar scroll separately", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "desktop-only shell");
+
+    await page.setViewportSize({ height: 700, width: 1440 });
+    await page.goto("/categories/electronics");
+
+    const offsets = () =>
+      page.evaluate(() => ({
+        aside: document.querySelector("aside")?.scrollTop ?? -1,
+        content: document.getElementById("app-scroll")?.scrollTop ?? -1,
+        window: window.scrollY,
+      }));
+
+    expect(await offsets()).toEqual({ aside: 0, content: 0, window: 0 });
+
+    await page.locator("#app-scroll").evaluate((node) => {
+      node.scrollTop = 600;
+    });
+
+    const afterContent = await offsets();
+    expect(afterContent.content).toBeGreaterThan(0);
+    expect(afterContent.aside, "sidebar must not move").toBe(0);
+    expect(afterContent.window, "document must not scroll").toBe(0);
+
+    await page.locator("aside").evaluate((node) => {
+      node.scrollTop = 300;
+    });
+
+    const afterAside = await offsets();
+    expect(afterAside.aside).toBeGreaterThan(0);
+    expect(afterAside.content, "content must keep its own position").toBe(
+      afterContent.content,
+    );
+    expect(afterAside.window).toBe(0);
+  });
+
+  test("the document itself does not scroll on desktop", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "desktop-only shell");
+
+    await page.setViewportSize({ height: 700, width: 1440 });
+    await page.goto("/categories/electronics");
+
+    const documentScrolls = await page.evaluate(
+      () =>
+        document.documentElement.scrollHeight >
+        document.documentElement.clientHeight + 1,
+    );
+
+    expect(documentScrolls).toBe(false);
+  });
+
+  test("the header responds to the content pane, not the window", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "desktop-only shell");
+
+    await page.setViewportSize({ height: 700, width: 1440 });
+    await page.goto("/categories/electronics");
+
+    const header = page.getByRole("banner");
+    await expect(header).toHaveAttribute("data-state", "full");
+
+    await page.locator("#app-scroll").evaluate((node) => {
+      node.scrollTop = 800;
+    });
+    await expect(header).toHaveAttribute("data-state", "hidden");
+
+    await page.locator("#app-scroll").evaluate((node) => {
+      node.scrollTop = 400;
+    });
+    await expect(header).toHaveAttribute("data-state", "compact");
+
+    await page.locator("#app-scroll").evaluate((node) => {
+      node.scrollTop = 0;
+    });
+    await expect(header).toHaveAttribute("data-state", "full");
+  });
+
+  test("mobile keeps a single document scroll", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "mobile-only");
+
+    await page.goto("/categories/electronics");
+
+    const documentScrolls = await page.evaluate(
+      () =>
+        document.documentElement.scrollHeight >
+        document.documentElement.clientHeight + 1,
+    );
+
+    expect(documentScrolls).toBe(true);
+  });
+});
+
+test.describe("app shell geometry", () => {
+  test("header starts after the sidebar, not across it", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "desktop-only");
+
+    await page.setViewportSize({ height: 800, width: 1440 });
+    await page.goto("/categories/electronics");
+
+    const aside = await page.locator("aside").boundingBox();
+    const banner = await page.getByRole("banner").boundingBox();
+
+    expect(aside).not.toBeNull();
+    expect(banner).not.toBeNull();
+
+    expect(aside?.x, "sidebar flush to the left edge").toBe(0);
+    expect(aside?.height, "sidebar spans the viewport").toBeGreaterThanOrEqual(790);
+
+    expect(banner?.x, "header begins where the sidebar ends").toBeGreaterThanOrEqual(
+      (aside?.x ?? 0) + (aside?.width ?? 0),
+    );
   });
 });
