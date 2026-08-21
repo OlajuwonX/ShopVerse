@@ -6,6 +6,7 @@ import { toMajorUnits, toMinorUnits } from "@/lib/money";
 
 export const FILTER_PARAM = {
   ATTRIBUTE_PREFIX: "attr.",
+  QUERY: "q",
   BRAND: "brand",
   IN_STOCK: "inStock",
   MAX_PRICE: "maxPrice",
@@ -22,6 +23,7 @@ export const MAX_RATING = 5;
 
 export type CatalogueFilterState = {
   attributes: Record<string, string[]>;
+  query: string | null;
   brandSlugs: string[];
   inStockOnly: boolean;
   maxPrice: number | null;
@@ -33,6 +35,7 @@ export type CatalogueFilterState = {
 
 export const EMPTY_FILTER_STATE: CatalogueFilterState = {
   attributes: {},
+  query: null,
   brandSlugs: [],
   inStockOnly: false,
   maxPrice: null,
@@ -91,6 +94,16 @@ function parseSort(raw: string | null): CatalogueSort {
   return match ?? EMPTY_FILTER_STATE.sort;
 }
 
+function parseQuery(raw: string | null) {
+  if (raw === null) {
+    return null;
+  }
+
+  const trimmed = raw.trim().replace(/\s+/g, " ").slice(0, 120);
+
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 export function parseCatalogueFilters(params: URLSearchParams): CatalogueFilterState {
   const attributes: Record<string, string[]> = {};
 
@@ -130,12 +143,17 @@ export function parseCatalogueFilters(params: URLSearchParams): CatalogueFilterS
     minPrice: swap ? maxPrice : minPrice,
     minRating: parseRating(params.get(FILTER_PARAM.RATING)),
     onSaleOnly: parseFlag(params.get(FILTER_PARAM.ON_SALE)),
+    query: parseQuery(params.get(FILTER_PARAM.QUERY)),
     sort: parseSort(params.get(FILTER_PARAM.SORT)),
   };
 }
 
 export function buildCatalogueSearchParams(state: CatalogueFilterState) {
   const params = new URLSearchParams();
+
+  if (state.query) {
+    params.set(FILTER_PARAM.QUERY, state.query);
+  }
 
   if (state.brandSlugs.length > 0) {
     params.set(FILTER_PARAM.BRAND, uniqueSorted(state.brandSlugs).join(","));

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { serverEnv } from "@/config/env";
 import { siteConfig } from "@/config/site";
+import { Providers } from "@/app/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,7 +32,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
