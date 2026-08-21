@@ -3,15 +3,11 @@ import { notFound } from "next/navigation";
 
 import { ProductGrid } from "@/components/commerce/ProductGrid";
 import { AppliedFilters } from "@/components/filters/AppliedFilters";
-import {
-  CatalogueFilters,
-  type FilterFacets,
-} from "@/components/filters/CatalogueFilters";
+import type { FilterFacets } from "@/components/filters/CatalogueFilters";
 import { FilterSheet } from "@/components/filters/FilterSheet";
 import { ResultCount } from "@/components/filters/ResultCount";
 import { SortSelect } from "@/components/filters/SortSelect";
 import { CategoryRail } from "@/components/navigation/CategoryRail";
-import { CategorySidebar } from "@/components/navigation/CategorySidebar";
 import { buildBreadcrumbJsonLd, JsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -127,67 +123,57 @@ export default async function CategoryPage({
   };
 
   return (
-    <div className="mx-auto w-full max-w-(--page-max) px-(--page-gutter) py-6">
+    <div className="w-full py-6">
       <JsonLd data={buildBreadcrumbJsonLd(breadcrumbs, serverEnv.APP_ORIGIN)} />
 
       <Breadcrumb className="mb-4" items={breadcrumbs} />
 
       <CategoryRail activeSlug={category.slug} className="mb-6 lg:hidden" tree={tree} />
 
-      <div className="flex gap-8">
-        <aside className="hidden w-64 shrink-0 lg:block">
-          <div className="sticky top-32 grid gap-6">
-            <CategorySidebar activeSlug={category.slug} tree={tree} />
-            <CatalogueFilters facets={facets} />
-          </div>
-        </aside>
+      <div className="min-w-0">
+        <header className="mb-4 grid gap-2">
+          <h1 className="text-heading-2 font-bold text-text">{category.name}</h1>
+          {category.description ? (
+            <p className="text-body-sm text-text-muted">{category.description}</p>
+          ) : null}
 
-        <div className="min-w-0 flex-1">
-          <header className="mb-4 grid gap-2">
-            <h1 className="text-heading-2 font-bold text-text">{category.name}</h1>
-            {category.description ? (
-              <p className="text-body-sm text-text-muted">{category.description}</p>
-            ) : null}
-
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <ResultCount context={category.name} total={page.totalCount} />
-              <div className="flex items-center gap-3">
-                <FilterSheet facets={facets} />
-                <SortSelect />
-              </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <ResultCount context={category.name} total={page.totalCount} />
+            <div className="flex items-center gap-3">
+              <FilterSheet facets={facets} />
+              <SortSelect />
             </div>
+          </div>
 
-            {droppedBrands > 0 ? (
-              <p className="text-caption text-warning">
-                {droppedBrands} brand filter{droppedBrands === 1 ? "" : "s"} no longer
-                apply to this category and {droppedBrands === 1 ? "was" : "were"}{" "}
-                ignored.
-              </p>
-            ) : null}
-
-            <AppliedFilters brandNames={brandNames} />
-          </header>
-
-          {page.items.length === 0 ? (
-            <EmptyState
-              description="No products match these filters. Clearing them will show the full category."
-              title="No products found"
-            />
-          ) : (
-            <ProductGrid
-              isAboveFold
-              label={`${category.name} products`}
-              products={page.items}
-            />
-          )}
-
-          {page.nextCursor ? (
-            <p className="mt-6 text-caption text-text-subtle">
-              Showing the first {page.items.length} of {page.totalCount}; continuous
-              browsing arrives in Stage 22.
+          {droppedBrands > 0 ? (
+            <p className="text-caption text-warning">
+              {droppedBrands} brand filter{droppedBrands === 1 ? "" : "s"} no longer
+              apply to this category and {droppedBrands === 1 ? "was" : "were"} ignored.
             </p>
           ) : null}
-        </div>
+
+          <AppliedFilters brandNames={brandNames} />
+        </header>
+
+        {page.items.length === 0 ? (
+          <EmptyState
+            description="No products match these filters. Clearing them will show the full category."
+            title="No products found"
+          />
+        ) : (
+          <ProductGrid
+            isAboveFold
+            label={`${category.name} products`}
+            products={page.items}
+          />
+        )}
+
+        {page.nextCursor ? (
+          <p className="mt-6 text-caption text-text-subtle">
+            Showing the first {page.items.length} of {page.totalCount}; continuous
+            browsing arrives in Stage 22.
+          </p>
+        ) : null}
       </div>
     </div>
   );

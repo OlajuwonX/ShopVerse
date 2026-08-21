@@ -39,6 +39,7 @@ import { getCategoryAndDescendantIds } from "@/server/services/categories";
 
 export const POSTGRES_INTEGER_MAX = 2_147_483_647;
 export const MAX_PRICE_MINOR_UNITS = POSTGRES_INTEGER_MAX;
+export const CATALOGUE_PRICE_CEILING = 5_000_000_00;
 
 export type ProductListItem = {
   basePrice: number;

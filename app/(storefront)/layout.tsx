@@ -13,9 +13,10 @@ import { SearchInput } from "@/components/ui/SearchInput";
 
 type StorefrontLayoutProps = {
   children: ReactNode;
+  sidebar: ReactNode;
 };
 
-export default function StorefrontLayout({ children }: StorefrontLayoutProps) {
+export default function StorefrontLayout({ children, sidebar }: StorefrontLayoutProps) {
   return (
     <div className="min-h-screen bg-surface">
       <SkipLink />
@@ -53,7 +54,17 @@ export default function StorefrontLayout({ children }: StorefrontLayoutProps) {
         </div>
       </DirectionalHeader>
 
-      <main id={MAIN_CONTENT_ID}>{children}</main>
+      <div className="mx-auto flex w-full max-w-(--page-max) gap-8 px-(--page-gutter)">
+        <aside className="hidden w-64 shrink-0 py-6 lg:block">
+          <div className="sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto pr-1">
+            {sidebar}
+          </div>
+        </aside>
+
+        <main className="min-w-0 flex-1" id={MAIN_CONTENT_ID}>
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
