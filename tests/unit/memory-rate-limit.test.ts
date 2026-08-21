@@ -5,6 +5,8 @@ import {
   resetMemoryRateLimit,
 } from "@/server/security/memory-rate-limit";
 
+import { SEARCH_BURST_LIMIT, SEARCH_SUSTAINED_LIMIT } from "@/constants/search";
+
 const config = { action: "test", maxRequests: 3, windowMs: 1_000 };
 
 beforeEach(() => {
@@ -55,5 +57,21 @@ describe("checkMemoryRateLimit", () => {
     expect(
       checkMemoryRateLimit(config, "1.2.3.4").retryAfterSeconds,
     ).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("search limiter tiers", () => {
+  it("uses a tighter burst window than the sustained window", () => {
+    expect(SEARCH_BURST_LIMIT.windowMs).toBeLessThan(SEARCH_SUSTAINED_LIMIT.windowMs);
+  });
+
+  it("allows a higher sustained total than a single burst", () => {
+    expect(SEARCH_SUSTAINED_LIMIT.maxAttempts).toBeGreaterThan(
+      SEARCH_BURST_LIMIT.maxRequests,
+    );
+  });
+
+  it("keeps the burst tier permissive enough for a debounced typist", () => {
+    expect(SEARCH_BURST_LIMIT.maxRequests).toBeGreaterThanOrEqual(10);
   });
 });

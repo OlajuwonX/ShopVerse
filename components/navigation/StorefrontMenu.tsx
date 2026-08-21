@@ -154,7 +154,7 @@ export function StorefrontMenu() {
       {isOpen ? (
         <div className="fixed inset-0 z-drawer flex md:hidden">
           <button
-            aria-label="Close menu"
+            aria-hidden="true"
             className="absolute inset-0 bg-surface-inverse/40"
             onClick={close}
             tabIndex={-1}

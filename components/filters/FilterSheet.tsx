@@ -74,7 +74,7 @@ export function FilterSheet({ facets }: { facets: FilterFacets }) {
       {isOpen ? (
         <div className="fixed inset-0 z-drawer flex items-end">
           <button
-            aria-label="Close filters"
+            aria-hidden="true"
             className="absolute inset-0 bg-surface-inverse/40"
             onClick={() => {
               setIsOpen(false);

@@ -1,10 +1,11 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useTransition } from "react";
+import { useCallback, useMemo, useOptimistic, useTransition } from "react";
 
 import {
   buildCatalogueSearchParams,
+  EMPTY_FILTER_STATE,
   parseCatalogueFilters,
   toggleValue,
   type CatalogueFilterState,
@@ -16,10 +17,12 @@ export function useCatalogueFilters() {
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const filters = useMemo(
+  const urlFilters = useMemo(
     () => parseCatalogueFilters(new URLSearchParams(searchParams.toString())),
     [searchParams],
   );
+
+  const [filters, setOptimisticFilters] = useOptimistic(urlFilters);
 
   const apply = useCallback(
     (next: CatalogueFilterState) => {
@@ -27,12 +30,13 @@ export function useCatalogueFilters() {
       const query = params.toString();
 
       startTransition(() => {
+        setOptimisticFilters(next);
         router.replace(query.length > 0 ? `${pathname}?${query}` : pathname, {
           scroll: false,
         });
       });
     },
-    [pathname, router],
+    [pathname, router, setOptimisticFilters],
   );
 
   const update = useCallback(
@@ -68,9 +72,21 @@ export function useCatalogueFilters() {
 
   const clearAll = useCallback(() => {
     startTransition(() => {
-      router.replace(pathname, { scroll: false });
+      setOptimisticFilters({
+        ...EMPTY_FILTER_STATE,
+        ...(filters.query ? { query: filters.query } : {}),
+      });
+      router.replace(
+        filters.query
+          ? `${pathname}?${buildCatalogueSearchParams({
+              ...EMPTY_FILTER_STATE,
+              query: filters.query,
+            }).toString()}`
+          : pathname,
+        { scroll: false },
+      );
     });
-  }, [pathname, router]);
+  }, [filters.query, pathname, router, setOptimisticFilters]);
 
   return {
     apply,

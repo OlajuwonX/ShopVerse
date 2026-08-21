@@ -13,7 +13,7 @@
   --color-border-strong: #b9b0a2;
   --color-text: #171717;
   --color-text-muted: #65605a;
-  --color-text-subtle: #837b71;
+  --color-text-subtle: #767065;
   --color-brand: #0f766e;
   --color-brand-strong: #115e59;
   --color-brand-soft: #ccfbf1;
@@ -26,7 +26,7 @@
   --color-danger: #b91c1c;
   --color-danger-soft: #fee2e2;
   --color-price: #0f766e;
-  --color-sale: #e11d48;
+  --color-sale: #be123c;
 
   --text-display: 3.5rem;
   --text-display--line-height: 0.96;
@@ -95,7 +95,7 @@
   --color-warning: #fbbf24;
   --color-warning-soft: #78350f;
   --color-danger: #f87171;
-  --color-danger-soft: #7f1d1d;
+  --color-danger-soft: #4c0d13;
   --color-price: #5eead4;
   --color-sale: #fb7185;
 }

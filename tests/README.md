@@ -61,3 +61,29 @@ unit tests stay runnable anywhere. Run `pnpm db:seed` before the integration sui
 E2E (Playwright) per `MASTER.md` §86, and the concurrency and idempotency tests required by
 primitive 33 §"Concurrency and idempotency tests are mandatory" — those need the checkout,
 payment and inventory code that arrives in Stages 27–30.
+
+## E2E and accessibility (Playwright)
+
+```bash
+pnpm test:e2e          # both projects
+pnpm test:e2e:ui       # interactive runner
+```
+
+Playwright starts its own production server on port 3100, so it never collides with a
+`pnpm start` on 3000. Two projects run every spec: `desktop` (1440x900) and `mobile`
+(390x844).
+
+| File                                 | Covers                                                                                                                                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `e2e/accessibility.spec.ts`          | axe-core scan (WCAG 2.0/2.1 A + AA) on six surfaces, landmark and heading structure, unique landmark names, skip link                                                                 |
+| `e2e/search-combobox.spec.ts`        | combobox ARIA, listbox, `aria-activedescendant`, arrow-key wrap, Escape, Enter, debounce request counting, recent-search persistence                                                  |
+| `e2e/navigation-and-filters.spec.ts` | persistent sidebar per breakpoint and per route, active-branch marking, mobile sheet focus trap and scroll lock, live-region count, filter/chip/clear URL behaviour, slider semantics |
+
+### What this does and does not prove
+
+It runs a **real browser** and asserts against the **accessibility tree** — the same tree a
+screen reader consumes — plus automated axe rules. That covers roles, accessible names,
+`aria-activedescendant`, focus movement and contrast.
+
+It is **not** a human screen-reader pass. Announcement quality, verbosity and reading order
+in NVDA/JAWS/VoiceOver remain unverified.

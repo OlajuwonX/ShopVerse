@@ -57,7 +57,7 @@ export function AdminMobileNav({ adminRoot, permissions }: AdminMobileNavProps) 
       {isOpen ? (
         <div className="fixed inset-0 z-drawer flex">
           <button
-            aria-label="Close backoffice menu"
+            aria-hidden="true"
             className="absolute inset-0 bg-surface-inverse/40"
             onClick={() => {
               setIsOpen(false);

@@ -7,7 +7,15 @@ import { db } from "@/server/db";
 import { rateLimits } from "@/server/db/schema";
 import { hashToken } from "@/server/auth/tokens";
 
-type RateLimitConfig = (typeof AUTH_RATE_LIMITS)[keyof typeof AUTH_RATE_LIMITS];
+export type RateLimitConfig = {
+  action: string;
+  blockMs: number;
+  maxAttempts: number;
+  windowMs: number;
+};
+
+export type AuthRateLimitConfig =
+  (typeof AUTH_RATE_LIMITS)[keyof typeof AUTH_RATE_LIMITS];
 
 type RateLimitResult = { allowed: true } | { allowed: false; retryAfter: Date };
 
