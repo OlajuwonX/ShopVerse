@@ -11,7 +11,7 @@ export default function StorefrontError({
   reset: () => void;
 }) {
   return (
-    <div className="mx-auto grid w-full max-w-(--page-max) gap-4 px-(--page-gutter) py-12">
+    <div className="grid gap-4 py-12">
       <ErrorState
         description="Something went wrong loading this page. Your cart and account are unaffected."
         title="This page could not be loaded"

@@ -26,7 +26,7 @@ export default async function HomePage() {
   const sections = await getCachedActiveSections();
 
   return (
-    <div className="mx-auto grid w-full max-w-(--page-max) gap-10 px-(--page-gutter) py-6">
+    <div className="grid gap-10 py-6">
       <h1 className="sr-only">ShopVerse — shop electronics, fashion, home and more</h1>
 
       {sections.length === 0 ? (

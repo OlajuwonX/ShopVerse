@@ -120,7 +120,11 @@ export function SectionRenderer({
   if (payload.kind === "brands") {
     return (
       <SectionShell title={section.title} viewMoreHref={section.viewMoreHref}>
-        <ul className="-mx-(--page-gutter) flex snap-x gap-2 overflow-x-auto px-(--page-gutter) pb-2">
+        <ul
+          aria-label={section.title}
+          className="-mx-(--page-gutter) flex snap-x gap-2 overflow-x-auto px-(--page-gutter) pb-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          tabIndex={0}
+        >
           {payload.items.map((brand) => (
             <li className="snap-start" key={brand.slug}>
               <span className="inline-flex min-h-11 items-center rounded-full border border-border bg-surface-raised px-4 text-body-sm font-semibold whitespace-nowrap text-text">

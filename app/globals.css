@@ -72,6 +72,7 @@
   color-scheme: light;
   --page-gutter: 1rem;
   --page-max: 80rem;
+  --content-max: 76rem;
 }
 
 .dark {

@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function ProductNotFound() {
   return (
-    <div className="mx-auto grid w-full max-w-(--page-max) gap-4 px-(--page-gutter) py-12">
+    <div className="grid gap-4 py-12">
       <EmptyState
         action={
           <Link

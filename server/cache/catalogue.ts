@@ -1,6 +1,7 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 
 import type { CatalogueQuery } from "@/features/products/schemas/catalogue-query";
 import {
@@ -74,47 +75,46 @@ const cachedCategoryTree = unstable_cache(
   { revalidate: CATALOGUE_STRUCTURE_TTL_SECONDS, tags: [cacheTags.categories()] },
 );
 
-export function getCachedCategoryTree(): Promise<CategoryNode[]> {
-  return cachedCategoryTree();
-}
+export const getCachedCategoryTree = cache((): Promise<CategoryNode[]> =>
+  cachedCategoryTree(),
+);
 
-export function getCachedCategoryBySlug(slug: string) {
-  return unstable_cache(
+export const getCachedCategoryBySlug = cache((slug: string) =>
+  unstable_cache(
     () => getCategoryBySlug(slug),
     [CACHE_NAMESPACE, "category-by-slug", slug],
     {
       revalidate: CATALOGUE_STRUCTURE_TTL_SECONDS,
       tags: [cacheTags.categories(), cacheTags.categorySlug(slug)],
     },
-  )();
-}
+  )(),
+);
 
-export function getCachedCategoryAncestors(categoryId: string) {
-  return unstable_cache(
+export const getCachedCategoryAncestors = cache((categoryId: string) =>
+  unstable_cache(
     () => getCategoryAncestors(categoryId),
     [CACHE_NAMESPACE, "category-ancestors", categoryId],
     {
       revalidate: CATALOGUE_STRUCTURE_TTL_SECONDS,
       tags: [cacheTags.categories(), cacheTags.category(categoryId)],
     },
-  )();
-}
+  )(),
+);
 
-export function getCachedCategoryFilterAttributes(
-  categoryId: string,
-): Promise<ResolvedAttribute[]> {
-  return unstable_cache(
-    () => getCategoryFilterAttributes(categoryId),
-    [CACHE_NAMESPACE, "category-filter-attributes", categoryId],
-    {
-      revalidate: CATALOGUE_STRUCTURE_TTL_SECONDS,
-      tags: [cacheTags.categories(), cacheTags.category(categoryId)],
-    },
-  )();
-}
+export const getCachedCategoryFilterAttributes = cache(
+  (categoryId: string): Promise<ResolvedAttribute[]> =>
+    unstable_cache(
+      () => getCategoryFilterAttributes(categoryId),
+      [CACHE_NAMESPACE, "category-filter-attributes", categoryId],
+      {
+        revalidate: CATALOGUE_STRUCTURE_TTL_SECONDS,
+        tags: [cacheTags.categories(), cacheTags.category(categoryId)],
+      },
+    )(),
+);
 
-export function getCachedBrandsForCategory(categorySlug?: string) {
-  return unstable_cache(
+export const getCachedBrandsForCategory = cache((categorySlug?: string) =>
+  unstable_cache(
     () => listBrandsForCategory(categorySlug),
     [CACHE_NAMESPACE, "brands-for-category", categorySlug ?? "all"],
     {
@@ -125,15 +125,15 @@ export function getCachedBrandsForCategory(categorySlug?: string) {
         ...(categorySlug ? [cacheTags.categorySlug(categorySlug)] : []),
       ],
     },
-  )();
-}
+  )(),
+);
 
-export function getCachedProductPage(query: CatalogueQuery): Promise<ProductPage> {
-  const canonical = canonicaliseCatalogueQuery(query);
+const productPageForKey = cache((key: string): Promise<ProductPage> => {
+  const canonical = JSON.parse(key) as CatalogueQuery;
 
   return unstable_cache(
     () => listProducts(canonical),
-    [CACHE_NAMESPACE, "product-page", JSON.stringify(canonical)],
+    [CACHE_NAMESPACE, "product-page", key],
     {
       revalidate: CATALOGUE_LISTING_TTL_SECONDS,
       tags: [
@@ -144,15 +144,20 @@ export function getCachedProductPage(query: CatalogueQuery): Promise<ProductPage
       ],
     },
   )();
+});
+
+export function getCachedProductPage(query: CatalogueQuery): Promise<ProductPage> {
+  return productPageForKey(catalogueQueryKey(query));
 }
 
-export function getCachedProductBySlug(slug: string): Promise<ProductDetail | null> {
-  return unstable_cache(
-    () => getProductBySlug(slug),
-    [CACHE_NAMESPACE, "product-by-slug", slug],
-    {
-      revalidate: CATALOGUE_LISTING_TTL_SECONDS,
-      tags: [cacheTags.productSlug(slug)],
-    },
-  )();
-}
+export const getCachedProductBySlug = cache(
+  (slug: string): Promise<ProductDetail | null> =>
+    unstable_cache(
+      () => getProductBySlug(slug),
+      [CACHE_NAMESPACE, "product-by-slug", slug],
+      {
+        revalidate: CATALOGUE_LISTING_TTL_SECONDS,
+        tags: [cacheTags.productSlug(slug)],
+      },
+    )(),
+);

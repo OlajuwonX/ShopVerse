@@ -44,7 +44,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
   });
 
   return (
-    <div className="mx-auto grid w-full max-w-(--page-max) gap-6 px-(--page-gutter) py-6">
+    <div className="grid gap-6 py-6">
       <Breadcrumb
         items={[
           { href: "/", label: "Home" },
