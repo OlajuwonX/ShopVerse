@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ProductGrid } from "@/components/commerce/ProductGrid";
+import { InfiniteProductGrid } from "@/components/commerce/InfiniteProductGrid";
 import { AppliedFilters } from "@/components/filters/AppliedFilters";
 import { FilterSheet } from "@/components/filters/FilterSheet";
 import { ResultCount } from "@/components/filters/ResultCount";
@@ -9,7 +9,10 @@ import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SEARCH_MIN_LENGTH } from "@/constants/search";
 import { parseCatalogueFilters } from "@/features/filters/catalogue-url";
-import { catalogueQuerySchema } from "@/features/products/schemas/catalogue-query";
+import {
+  toCatalogueQuery,
+  type CatalogueRequest,
+} from "@/features/products/schemas/catalogue-api";
 import {
   getCachedBrandsForCategory,
   getCachedProductPage,
@@ -46,22 +49,14 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   const appliedBrands = filters.brandSlugs.filter((slug) => knownBrands.has(slug));
   const droppedBrands = filters.brandSlugs.length - appliedBrands.length;
 
+  const catalogueRequest: CatalogueRequest = {
+    categorySlug: null,
+    filters: { ...filters, brandSlugs: appliedBrands },
+  };
+
   const page = isSearchable
     ? await getCachedProductPage(
-        catalogueQuerySchema.parse({
-          ...(Object.keys(filters.attributes).length > 0
-            ? { attributes: filters.attributes }
-            : {}),
-          ...(appliedBrands.length > 0 ? { brandSlugs: appliedBrands } : {}),
-          ...(filters.inStockOnly ? { inStockOnly: true } : {}),
-          limit: SEARCH_PAGE_SIZE,
-          ...(filters.maxPrice === null ? {} : { maxPrice: filters.maxPrice }),
-          ...(filters.minPrice === null ? {} : { minPrice: filters.minPrice }),
-          ...(filters.minRating === null ? {} : { minRating: filters.minRating }),
-          ...(filters.onSaleOnly ? { onSaleOnly: true } : {}),
-          search: term,
-          sort: filters.sort,
-        }),
+        toCatalogueQuery(catalogueRequest, { limit: SEARCH_PAGE_SIZE }),
       )
     : null;
 
@@ -127,18 +122,11 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
           title={`No results for ${term}`}
         />
       ) : page ? (
-        <ProductGrid
-          isAboveFold
+        <InfiniteProductGrid
+          initialPage={page}
           label={`Search results for ${term}`}
-          products={page.items}
+          request={catalogueRequest}
         />
-      ) : null}
-
-      {page?.nextCursor ? (
-        <p className="mt-6 text-caption text-text-subtle">
-          Showing the first {page.items.length} of {page.totalCount}; continuous
-          browsing arrives in Stage 22.
-        </p>
       ) : null}
     </div>
   );

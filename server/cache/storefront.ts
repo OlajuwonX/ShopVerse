@@ -2,6 +2,8 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 
+import { EMPTY_FILTER_STATE } from "@/features/filters/catalogue-url";
+import type { CatalogueRequest } from "@/features/products/schemas/catalogue-api";
 import { getCachedProductPage } from "@/server/cache/catalogue";
 import {
   cacheTags,
@@ -25,7 +27,12 @@ const CACHE_NAMESPACE = "storefront";
 const SECTION_LIST_TTL_SECONDS = 60;
 
 export type SectionPayload =
-  | { items: ProductListItem[]; kind: "products" }
+  | {
+      items: ProductListItem[];
+      kind: "products";
+      nextCursor: string | null;
+      totalCount: number;
+    }
   | { items: { id: string; name: string; slug: string }[]; kind: "categories" }
   | { items: { name: string; slug: string }[]; kind: "brands" }
   | { campaign: SectionCampaign; kind: "campaign" }
@@ -33,6 +40,7 @@ export type SectionPayload =
   | { kind: "error" };
 
 export type ResolvedSection = {
+  continuation: CatalogueRequest | null;
   payload: SectionPayload;
   section: StorefrontSection;
 };
@@ -99,7 +107,9 @@ async function resolveProductSection(
       ? (await getCachedProductPage(dynamicQuery)).items
       : await cachedCollectionProducts(section.collectionId, limit);
 
-    return items.length > 0 ? { items, kind: "products" } : { kind: "empty" };
+    return items.length > 0
+      ? { items, kind: "products", nextCursor: null, totalCount: items.length }
+      : { kind: "empty" };
   }
 
   const query = buildSectionQuery(section);
@@ -111,7 +121,12 @@ async function resolveProductSection(
   const page = await getCachedProductPage(query);
 
   return page.items.length > 0
-    ? { items: page.items, kind: "products" }
+    ? {
+        items: page.items,
+        kind: "products",
+        nextCursor: page.nextCursor,
+        totalCount: page.totalCount,
+      }
     : { kind: "empty" };
 }
 
@@ -160,11 +175,37 @@ async function resolveSectionPayload(
   }
 }
 
+function continuationFor(section: StorefrontSection): CatalogueRequest | null {
+  if (section.type !== "product_grid") {
+    return null;
+  }
+
+  const query = buildSectionQuery(section);
+
+  if (!query) {
+    return null;
+  }
+
+  return {
+    categorySlug: query.categorySlug ?? null,
+    filters: {
+      ...EMPTY_FILTER_STATE,
+      ...(query.onSaleOnly ? { onSaleOnly: true } : {}),
+      sort: query.sort,
+    },
+    limit: query.limit,
+  };
+}
+
 export async function resolveSection(
   section: StorefrontSection,
 ): Promise<ResolvedSection> {
   try {
-    return { payload: await resolveSectionPayload(section), section };
+    return {
+      continuation: continuationFor(section),
+      payload: await resolveSectionPayload(section),
+      section,
+    };
   } catch (error) {
     console.error("storefront_section_resolve_failed", {
       error: error instanceof Error ? error.message : "unknown",
@@ -172,6 +213,6 @@ export async function resolveSection(
       sectionType: section.type,
     });
 
-    return { payload: { kind: "error" }, section };
+    return { continuation: null, payload: { kind: "error" }, section };
   }
 }

@@ -22,3 +22,9 @@ export const SEARCH_SUSTAINED_LIMIT = {
   maxAttempts: 90,
   windowMs: 5 * 60 * 1000,
 } as const;
+
+export const CATALOGUE_BURST_LIMIT = {
+  action: "catalogue_page",
+  maxRequests: 40,
+  windowMs: 10 * 1000,
+} as const;

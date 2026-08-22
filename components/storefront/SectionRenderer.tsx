@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { InfiniteProductGrid } from "@/components/commerce/InfiniteProductGrid";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
 import { ProductRail } from "@/components/commerce/ProductRail";
 import { SectionShell } from "@/components/storefront/SectionShell";
@@ -16,7 +17,7 @@ export function SectionRenderer({
   isAboveFold?: boolean;
   resolved: ResolvedSection;
 }) {
-  const { payload, section } = resolved;
+  const { continuation, payload, section } = resolved;
 
   if (payload.kind === "empty") {
     return null;
@@ -142,11 +143,23 @@ export function SectionRenderer({
   return (
     <SectionShell title={section.title} viewMoreHref={section.viewMoreHref}>
       {section.type === "product_grid" ? (
-        <ProductGrid
-          columns={columns}
-          isAboveFold={isAboveFold}
-          products={payload.items}
-        />
+        continuation ? (
+          <InfiniteProductGrid
+            initialPage={{
+              items: payload.items,
+              nextCursor: payload.nextCursor,
+              totalCount: payload.totalCount,
+            }}
+            label={section.title}
+            request={continuation}
+          />
+        ) : (
+          <ProductGrid
+            columns={columns}
+            isAboveFold={isAboveFold}
+            products={payload.items}
+          />
+        )
       ) : (
         <ProductRail
           isAboveFold={isAboveFold}

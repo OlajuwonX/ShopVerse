@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ProductGrid } from "@/components/commerce/ProductGrid";
+import { InfiniteProductGrid } from "@/components/commerce/InfiniteProductGrid";
 import { AppliedFilters } from "@/components/filters/AppliedFilters";
 import type { FilterFacets } from "@/components/filters/CatalogueFilters";
 import { FilterSheet } from "@/components/filters/FilterSheet";
@@ -14,7 +14,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { serverEnv } from "@/config/env";
 import { buildCategoryBreadcrumbs } from "@/features/categories/navigation";
 import { parseCatalogueFilters } from "@/features/filters/catalogue-url";
-import { catalogueQuerySchema } from "@/features/products/schemas/catalogue-query";
+import {
+  toCatalogueQuery,
+  type CatalogueRequest,
+} from "@/features/products/schemas/catalogue-api";
 import { categoryHref } from "@/lib/routes";
 import {
   getCachedBrandsForCategory,
@@ -88,21 +91,13 @@ export default async function CategoryPage({
   const appliedBrands = filters.brandSlugs.filter((entry) => knownBrands.has(entry));
   const droppedBrands = filters.brandSlugs.length - appliedBrands.length;
 
+  const catalogueRequest: CatalogueRequest = {
+    categorySlug: category.slug,
+    filters: { ...filters, brandSlugs: appliedBrands },
+  };
+
   const page = await getCachedProductPage(
-    catalogueQuerySchema.parse({
-      ...(Object.keys(filters.attributes).length > 0
-        ? { attributes: filters.attributes }
-        : {}),
-      ...(appliedBrands.length > 0 ? { brandSlugs: appliedBrands } : {}),
-      categorySlug: category.slug,
-      ...(filters.inStockOnly ? { inStockOnly: true } : {}),
-      limit: CATEGORY_PAGE_SIZE,
-      ...(filters.maxPrice === null ? {} : { maxPrice: filters.maxPrice }),
-      ...(filters.minPrice === null ? {} : { minPrice: filters.minPrice }),
-      ...(filters.minRating === null ? {} : { minRating: filters.minRating }),
-      ...(filters.onSaleOnly ? { onSaleOnly: true } : {}),
-      sort: filters.sort,
-    }),
+    toCatalogueQuery(catalogueRequest, { limit: CATEGORY_PAGE_SIZE }),
   );
 
   const breadcrumbs = buildCategoryBreadcrumbs(ancestors, categoryHref);
@@ -161,19 +156,12 @@ export default async function CategoryPage({
             title="No products found"
           />
         ) : (
-          <ProductGrid
-            isAboveFold
+          <InfiniteProductGrid
+            initialPage={page}
             label={`${category.name} products`}
-            products={page.items}
+            request={catalogueRequest}
           />
         )}
-
-        {page.nextCursor ? (
-          <p className="mt-6 text-caption text-text-subtle">
-            Showing the first {page.items.length} of {page.totalCount}; continuous
-            browsing arrives in Stage 22.
-          </p>
-        ) : null}
       </div>
     </div>
   );
