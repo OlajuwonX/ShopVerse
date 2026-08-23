@@ -1,5 +1,6 @@
-import { ShoppingBag, User, type LucideIcon } from "lucide-react";
+import { User, type LucideIcon } from "lucide-react";
 
+import { CartLink } from "@/components/navigation/CartLink";
 import { WishlistLink } from "@/components/navigation/WishlistLink";
 import { IconButton } from "@/components/ui/IconButton";
 import { cn } from "@/lib/cn";
@@ -11,7 +12,6 @@ type HeaderAction = {
 };
 
 const headerActions: readonly HeaderAction[] = [
-  { available: false, icon: ShoppingBag, label: "Cart" },
   { available: false, icon: User, label: "Account" },
 ];
 
@@ -23,6 +23,7 @@ export function HeaderActions({ className }: HeaderActionsProps) {
   return (
     <div className={cn("flex items-center gap-1", className)}>
       <WishlistLink />
+      <CartLink />
 
       {headerActions.map((action) => {
         const Icon = action.icon;

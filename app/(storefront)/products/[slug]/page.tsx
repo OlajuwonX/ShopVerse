@@ -147,6 +147,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
           <ProductPurchase
             basePrice={product.basePrice}
             comparePrice={product.comparePrice}
+            productId={product.id}
             productName={product.name}
             variants={product.variants}
           />

@@ -69,7 +69,9 @@ export function CatalogueFilters({ facets }: { facets: FilterFacets }) {
             <Checkbox
               checked={filters.minRating === rating}
               key={rating}
-              label={rating === MAX_RATING ? `${rating} stars` : `${rating} stars and up`}
+              label={
+                rating === MAX_RATING ? `${rating} stars` : `${rating} stars and up`
+              }
               name={`rating-${rating}`}
               onChange={() => {
                 update({ minRating: filters.minRating === rating ? null : rating });

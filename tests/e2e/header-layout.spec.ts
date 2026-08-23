@@ -54,17 +54,17 @@ test.describe("header layout", () => {
     await page.setViewportSize({ height: 900, width: 320 });
     await page.goto("/");
 
-    const wishlist = await page.getByRole("link", { name: /^Wishlist,/ }).boundingBox();
+    for (const name of [/^Wishlist,/, /^Cart,/]) {
+      const box = await page.getByRole("link", { name }).boundingBox();
 
-    expect(wishlist?.height ?? 0).toBeGreaterThanOrEqual(44);
-    expect(wishlist?.width ?? 0).toBeGreaterThanOrEqual(44);
-
-    for (const name of [/cart/i, /account/i]) {
-      const box = await page.getByRole("button", { name }).boundingBox();
-
-      expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
-      expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
+      expect(box?.height ?? 0, `${String(name)} height`).toBeGreaterThanOrEqual(44);
+      expect(box?.width ?? 0, `${String(name)} width`).toBeGreaterThanOrEqual(44);
     }
+
+    const account = await page.getByRole("button", { name: /account/i }).boundingBox();
+
+    expect(account?.height ?? 0).toBeGreaterThanOrEqual(44);
+    expect(account?.width ?? 0).toBeGreaterThanOrEqual(44);
   });
 
   test("the wordmark is hidden on the narrowest screens but the mark remains", async ({
@@ -157,7 +157,7 @@ test.describe("independent scroll regions", () => {
 
     const offsets = () =>
       page.evaluate(() => ({
-        aside: document.querySelector("aside")?.scrollTop ?? -1,
+        aside: document.getElementById("sidebar-scroll")?.scrollTop ?? -1,
         content: document.getElementById("app-scroll")?.scrollTop ?? -1,
         window: window.scrollY,
       }));
@@ -173,7 +173,7 @@ test.describe("independent scroll regions", () => {
     expect(afterContent.aside, "sidebar must not move").toBe(0);
     expect(afterContent.window, "document must not scroll").toBe(0);
 
-    await page.locator("aside").evaluate((node) => {
+    await page.locator("#sidebar-scroll").evaluate((node) => {
       node.scrollTop = 300;
     });
 

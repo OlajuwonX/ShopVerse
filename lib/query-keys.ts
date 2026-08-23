@@ -3,6 +3,11 @@ import { catalogueRequestKey } from "@/features/products/schemas/catalogue-api";
 import type { SearchSuggestions } from "@/server/services/search";
 
 export const queryKeys = {
+  cart: {
+    all: ["cart"] as const,
+    validation: (lineKeys: readonly string[]) =>
+      [...queryKeys.cart.all, "validation", [...lineKeys].sort().join("|")] as const,
+  },
   products: {
     all: ["products"] as const,
     list: (request: CatalogueRequest) =>

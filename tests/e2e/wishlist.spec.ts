@@ -141,9 +141,9 @@ test.describe("guest wishlist", () => {
     await expect(
       page.getByRole("heading", { name: "Nothing saved yet" }),
     ).toBeVisible();
-    expect(await readStoredWishlist(page)).toBe(
-      JSON.stringify({ items: [], version: 1 }),
-    );
+    await expect
+      .poll(() => readStoredWishlist(page), { timeout: 5000 })
+      .toBe(JSON.stringify({ items: [], version: 1 }));
   });
 
   test("corrupt stored data is discarded rather than thrown (WISH-01)", async ({

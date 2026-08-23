@@ -14,6 +14,10 @@ const moneyFormatter = new Intl.NumberFormat("en-NG", {
   style: "currency",
 });
 
+export function formatMoney(minorUnits: number) {
+  return moneyFormatter.format(minorUnits / 100);
+}
+
 export function Money({
   className,
   currency = "NGN",

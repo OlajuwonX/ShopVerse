@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 
+import { AddToCartButton } from "@/components/commerce/AddToCartButton";
 import { Money } from "@/components/commerce/Money";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 
 export type PurchaseVariant = {
@@ -19,6 +19,7 @@ export type PurchaseVariant = {
 type ProductPurchaseProps = {
   basePrice: number;
   comparePrice: number | null;
+  productId: string;
   productName: string;
   variants: readonly PurchaseVariant[];
 };
@@ -46,6 +47,7 @@ function discountPercentOf(price: number, comparePrice: number | null) {
 export function ProductPurchase({
   basePrice,
   comparePrice,
+  productId,
   productName,
   variants,
 }: ProductPurchaseProps) {
@@ -144,10 +146,13 @@ export function ProductPurchase({
       ) : null}
 
       <div className="hidden lg:block">
-        <PurchaseCta
+        <AddToCartButton
           inStock={inStock}
           needsSelection={needsSelection}
+          productId={productId}
           productName={productName}
+          unitPrice={price}
+          variantId={selected?.id ?? null}
         />
       </div>
 
@@ -161,46 +166,17 @@ export function ProductPurchase({
           </div>
 
           <div className="ml-auto">
-            <PurchaseCta
+            <AddToCartButton
               inStock={inStock}
               needsSelection={needsSelection}
+              productId={productId}
               productName={productName}
+              unitPrice={price}
+              variantId={selected?.id ?? null}
             />
           </div>
         </div>
       </div>
     </div>
-  );
-}
-
-function PurchaseCta({
-  inStock,
-  needsSelection,
-  productName,
-}: {
-  inStock: boolean;
-  needsSelection: boolean;
-  productName: string;
-}) {
-  if (!inStock) {
-    return (
-      <Button disabled size="lg" variant="secondary">
-        Out of stock
-      </Button>
-    );
-  }
-
-  return (
-    <Button
-      aria-label={
-        needsSelection
-          ? `Choose options for ${productName}`
-          : `Add ${productName} to cart, available soon`
-      }
-      disabled
-      size="lg"
-    >
-      {needsSelection ? "Choose options" : "Add to cart"}
-    </Button>
   );
 }

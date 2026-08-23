@@ -135,20 +135,27 @@ test.describe("filters", () => {
     await expect(page).toHaveURL("/categories/electronics");
   });
 
-  test("the price slider is a real slider with currency in its value text", async ({
+  test("the price filter is a single maximum slider, keyboard operable", async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "desktop-only");
     await page.goto("/categories/electronics");
 
-    const min = page.getByRole("slider", { name: /minimum price/i });
-    await expect(min).toBeVisible();
+    const sliders = page.getByRole("slider");
+    await expect(sliders).toHaveCount(1);
 
-    const valueText = await min.getAttribute("aria-valuetext");
-    expect(valueText).toContain("₦");
+    const maximum = sliders.first();
+    await expect(maximum).toHaveAccessibleName(/maximum price/i);
+    await expect(maximum).toHaveAttribute("min", "0");
+    await expect(maximum).toHaveAttribute("aria-valuetext", "Any price");
 
-    await min.focus();
-    await expect(min).toBeFocused();
+    await maximum.focus();
+    await expect(maximum).toBeFocused();
+
+    await maximum.press("ArrowLeft");
+
+    await expect(maximum).toHaveAttribute("aria-valuetext", /₦[\d,]+/);
+    await expect(page).toHaveURL(/maxPrice=\d+/);
   });
 
   test("keyboard-only: the product grid is reachable by tabbing", async ({

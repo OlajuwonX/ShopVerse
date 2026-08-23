@@ -9,3 +9,7 @@ export function categoryHref(slug: string) {
 export function wishlistHref() {
   return "/wishlist";
 }
+
+export function cartHref() {
+  return "/cart";
+}
