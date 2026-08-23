@@ -7,6 +7,7 @@ import shopverseMark from "@/public/logo/shopverse-mark.webp";
 import { LiveAnnouncer } from "@/components/feedback/LiveAnnouncer";
 import { DirectionalHeader } from "@/components/navigation/DirectionalHeader";
 import { HeaderActions } from "@/components/navigation/HeaderActions";
+import { SidebarBrand } from "@/components/navigation/SidebarBrand";
 import { MAIN_CONTENT_ID, SkipLink } from "@/components/navigation/SkipLink";
 import { StorefrontMenu } from "@/components/navigation/StorefrontMenu";
 import { SearchInput } from "@/components/ui/SearchInput";
@@ -23,8 +24,14 @@ export default function StorefrontLayout({ children, sidebar }: StorefrontLayout
       <SkipLink />
       <LiveAnnouncer />
 
-      <aside className="hidden w-72 shrink-0 border-r border-border lg:block lg:h-screen lg:overflow-y-auto lg:overscroll-contain">
-        <div className="px-3 py-6">{sidebar}</div>
+      <aside className="hidden w-72 shrink-0 border-r border-border lg:flex lg:h-screen lg:flex-col">
+        <div className="shrink-0 border-b border-border bg-surface px-3 py-4">
+          <SidebarBrand />
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-6">
+          {sidebar}
+        </div>
       </aside>
 
       <div

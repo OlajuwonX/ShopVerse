@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 
+import { MAX_RATING } from "@/features/filters/catalogue-url";
 import { useCatalogueFilters } from "@/features/filters/useCatalogueFilters";
 import { toMajorUnits } from "@/lib/money";
 
@@ -28,15 +29,24 @@ export function AppliedFilters({ brandNames }: { brandNames: Record<string, stri
   }
 
   if (filters.minPrice !== null || filters.maxPrice !== null) {
-    const from = filters.minPrice === null ? 0 : toMajorUnits(filters.minPrice);
+    const from = filters.minPrice === null ? null : toMajorUnits(filters.minPrice);
     const to = filters.maxPrice === null ? null : toMajorUnits(filters.maxPrice);
+
+    function priceLabel() {
+      if (from === null) {
+        return `Up to ₦${(to ?? 0).toLocaleString("en-NG")}`;
+      }
+
+      if (to === null) {
+        return `From ₦${from.toLocaleString("en-NG")}`;
+      }
+
+      return `₦${from.toLocaleString("en-NG")} – ₦${to.toLocaleString("en-NG")}`;
+    }
 
     chips.push({
       key: "price",
-      label:
-        to === null
-          ? `From ₦${from.toLocaleString("en-NG")}`
-          : `₦${from.toLocaleString("en-NG")} – ₦${to.toLocaleString("en-NG")}`,
+      label: priceLabel(),
       remove: () => {
         update({ maxPrice: null, minPrice: null });
       },
@@ -46,7 +56,10 @@ export function AppliedFilters({ brandNames }: { brandNames: Record<string, stri
   if (filters.minRating !== null) {
     chips.push({
       key: "rating",
-      label: `${filters.minRating}★ and up`,
+      label:
+        filters.minRating === MAX_RATING
+          ? `${filters.minRating}★`
+          : `${filters.minRating}★ and up`,
       remove: () => {
         update({ minRating: null });
       },

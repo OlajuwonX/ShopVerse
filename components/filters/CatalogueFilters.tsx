@@ -40,9 +40,8 @@ export function CatalogueFilters({ facets }: { facets: FilterFacets }) {
     <div aria-busy={isPending} className="grid gap-4">
       <PriceRange
         ceiling={facets.priceCeiling}
-        key={`${filters.minPrice ?? "min"}-${filters.maxPrice ?? "max"}`}
+        key={filters.maxPrice ?? "max"}
         maxPrice={filters.maxPrice}
-        minPrice={filters.minPrice}
         onCommit={(range) => {
           update(range);
         }}
@@ -70,7 +69,7 @@ export function CatalogueFilters({ facets }: { facets: FilterFacets }) {
             <Checkbox
               checked={filters.minRating === rating}
               key={rating}
-              label={`${rating} stars and up`}
+              label={rating === MAX_RATING ? `${rating} stars` : `${rating} stars and up`}
               name={`rating-${rating}`}
               onChange={() => {
                 update({ minRating: filters.minRating === rating ? null : rating });
