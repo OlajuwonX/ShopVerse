@@ -22,7 +22,9 @@ import {
   getProductBySlug,
   listBrandsForCategory,
   listProducts,
+  listProductsByIds,
   type ProductDetail,
+  type ProductListItem,
   type ProductPage,
 } from "@/server/services/products";
 
@@ -149,6 +151,20 @@ const productPageForKey = cache((key: string): Promise<ProductPage> => {
 
 export function getCachedProductPage(query: CatalogueQuery): Promise<ProductPage> {
   return productPageForKey(catalogueQueryKey(query));
+}
+
+const productsForIdKey = cache((key: string): Promise<ProductListItem[]> =>
+  listProductsByIds(JSON.parse(key) as string[]),
+);
+
+export function getProductsByIds(
+  productIds: readonly string[],
+): Promise<ProductListItem[]> {
+  if (productIds.length === 0) {
+    return Promise.resolve([]);
+  }
+
+  return productsForIdKey(JSON.stringify([...productIds]));
 }
 
 export const getCachedProductBySlug = cache(

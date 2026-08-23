@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { ProductGallery } from "@/components/commerce/ProductGallery";
 import { ProductPurchase } from "@/components/commerce/ProductPurchase";
+import { SaveProductButton } from "@/components/commerce/SaveProductButton";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildBreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
@@ -150,6 +151,12 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
             variants={product.variants}
           />
 
+          <SaveProductButton
+            className="justify-self-start"
+            productId={product.id}
+            productName={product.name}
+          />
+
           <p className="text-body-sm text-text-muted">
             Delivered nationwide. Delivery cost is calculated at checkout.
           </p>
@@ -190,6 +197,8 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
           </dl>
         </section>
       ) : null}
+
+      <div aria-hidden="true" className="h-20 lg:hidden" />
     </div>
   );
 }

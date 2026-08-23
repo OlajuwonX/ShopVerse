@@ -5,3 +5,7 @@ export function productHref(slug: string) {
 export function categoryHref(slug: string) {
   return `/categories/${slug}`;
 }
+
+export function wishlistHref() {
+  return "/wishlist";
+}

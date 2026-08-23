@@ -54,7 +54,12 @@ test.describe("header layout", () => {
     await page.setViewportSize({ height: 900, width: 320 });
     await page.goto("/");
 
-    for (const name of [/wishlist/i, /cart/i, /account/i]) {
+    const wishlist = await page.getByRole("link", { name: /^Wishlist,/ }).boundingBox();
+
+    expect(wishlist?.height ?? 0).toBeGreaterThanOrEqual(44);
+    expect(wishlist?.width ?? 0).toBeGreaterThanOrEqual(44);
+
+    for (const name of [/cart/i, /account/i]) {
       const box = await page.getByRole("button", { name }).boundingBox();
 
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);

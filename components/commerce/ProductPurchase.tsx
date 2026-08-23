@@ -169,8 +169,6 @@ export function ProductPurchase({
           </div>
         </div>
       </div>
-
-      <div aria-hidden="true" className="h-20 lg:hidden" />
     </div>
   );
 }

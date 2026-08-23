@@ -143,6 +143,83 @@ function getSortPlan(sort: CatalogueSort): SortPlan {
   }
 }
 
+const inStockExpression = sql<boolean>`exists (
+  select 1
+  from ${productVariants} variant
+  join ${inventory} stock on stock.variant_id = variant.id
+  where variant.product_id = ${products.id}
+    and variant.status = 'active'
+    and stock.available > 0
+)`;
+
+const productListSelection = {
+  basePrice: products.basePrice,
+  brandName: brands.name,
+  categorySlug: categories.slug,
+  comparePrice: products.comparePrice,
+  createdAt: products.createdAt,
+  id: products.id,
+  imageAlt: sql<string | null>`(
+    select image.alt from ${productImages} image
+    where image.product_id = ${products.id}
+    order by image.is_primary desc, image.sort_order asc
+    limit 1
+  )`,
+  imagePublicId: sql<string | null>`(
+    select image.cloudinary_public_id from ${productImages} image
+    where image.product_id = ${products.id}
+    order by image.is_primary desc, image.sort_order asc
+    limit 1
+  )`,
+  inStock: inStockExpression,
+  name: products.name,
+  popularity: products.popularity,
+  rating: products.rating,
+  ratingCount: products.ratingCount,
+  slug: products.slug,
+  variantCount: sql<number>`(
+    select count(*)::int from ${productVariants} variant
+    where variant.product_id = ${products.id} and variant.status = 'active'
+  )`,
+} as const;
+
+type ProductListRow = {
+  basePrice: number;
+  brandName: string;
+  categorySlug: string;
+  comparePrice: number | null;
+  createdAt: Date;
+  id: string;
+  imageAlt: string | null;
+  imagePublicId: string | null;
+  inStock: boolean;
+  name: string;
+  popularity: number;
+  rating: number | null;
+  ratingCount: number;
+  slug: string;
+  variantCount: number;
+};
+
+function toProductListItem(row: ProductListRow): ProductListItem {
+  return {
+    basePrice: row.basePrice,
+    brandName: row.brandName,
+    categorySlug: row.categorySlug,
+    comparePrice: row.comparePrice,
+    discountPercent: discountPercent(row.basePrice, row.comparePrice),
+    id: row.id,
+    imageAlt: row.imageAlt,
+    imagePublicId: row.imagePublicId,
+    inStock: row.inStock,
+    name: row.name,
+    rating: row.rating,
+    ratingCount: row.ratingCount,
+    requiresSelection: row.variantCount > 1,
+    slug: row.slug,
+  };
+}
+
 function attributeConditions(attributes: CatalogueQuery["attributes"]) {
   if (!attributes) {
     return [];
@@ -233,15 +310,6 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
 
   conditions.push(...attributeConditions(query.attributes));
 
-  const inStockExpression = sql<boolean>`exists (
-    select 1
-    from ${productVariants} variant
-    join ${inventory} stock on stock.variant_id = variant.id
-    where variant.product_id = ${products.id}
-      and variant.status = 'active'
-      and stock.available > 0
-  )`;
-
   if (query.inStockOnly) {
     conditions.push(inStockExpression);
   }
@@ -263,36 +331,7 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
     .where(and(...filterConditions));
 
   const rowsQuery = db
-    .select({
-      basePrice: products.basePrice,
-      brandName: brands.name,
-      categorySlug: categories.slug,
-      comparePrice: products.comparePrice,
-      createdAt: products.createdAt,
-      id: products.id,
-      imageAlt: sql<string | null>`(
-        select image.alt from ${productImages} image
-        where image.product_id = ${products.id}
-        order by image.is_primary desc, image.sort_order asc
-        limit 1
-      )`,
-      imagePublicId: sql<string | null>`(
-        select image.cloudinary_public_id from ${productImages} image
-        where image.product_id = ${products.id}
-        order by image.is_primary desc, image.sort_order asc
-        limit 1
-      )`,
-      inStock: inStockExpression,
-      name: products.name,
-      popularity: products.popularity,
-      rating: products.rating,
-      ratingCount: products.ratingCount,
-      slug: products.slug,
-      variantCount: sql<number>`(
-        select count(*)::int from ${productVariants} variant
-        where variant.product_id = ${products.id} and variant.status = 'active'
-      )`,
-    })
+    .select(productListSelection)
     .from(products)
     .innerJoin(brands, eq(products.brandId, brands.id))
     .innerJoin(categories, eq(products.categoryId, categories.id))
@@ -306,23 +345,7 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
   const page = hasMore ? rows.slice(0, limit) : rows;
   const last = page.at(-1);
 
-  const items = page.map((row) => ({
-    basePrice: row.basePrice,
-    brandName: row.brandName,
-    categorySlug: row.categorySlug,
-    comparePrice: row.comparePrice,
-    discountPercent: discountPercent(row.basePrice, row.comparePrice),
-    id: row.id,
-    imageAlt: row.imageAlt,
-    imagePublicId: row.imagePublicId,
-    inStock: row.inStock,
-    name: row.name,
-    rating: row.rating,
-    ratingCount: row.ratingCount,
-
-    requiresSelection: row.variantCount > 1,
-    slug: row.slug,
-  })) satisfies ProductListItem[];
+  const items = page.map(toProductListItem);
 
   function cursorValueOf(row: typeof last) {
     if (!row) {
@@ -352,6 +375,32 @@ export async function listProducts(query: CatalogueQuery): Promise<ProductPage> 
         : null,
     totalCount: countRows[0]?.total ?? 0,
   };
+}
+
+export async function listProductsByIds(
+  productIds: readonly string[],
+): Promise<ProductListItem[]> {
+  if (productIds.length === 0) {
+    return [];
+  }
+
+  const wanted = [...new Set(productIds)];
+
+  const rows = await db
+    .select(productListSelection)
+    .from(products)
+    .innerJoin(brands, eq(products.brandId, brands.id))
+    .innerJoin(categories, eq(products.categoryId, categories.id))
+    .where(and(eq(products.status, "active"), inArray(products.id, wanted)))
+    .limit(wanted.length);
+
+  const found = new Map(rows.map((row) => [row.id, toProductListItem(row)]));
+
+  return wanted.flatMap((productId) => {
+    const item = found.get(productId);
+
+    return item ? [item] : [];
+  });
 }
 
 export type ProductDetail = {

@@ -3,35 +3,27 @@
 import { Heart } from "lucide-react";
 
 import { announce } from "@/components/feedback/announcer";
+import { Button } from "@/components/ui/Button";
 import { useWishlistItem } from "@/features/wishlist/useGuestWishlist";
 import { cn } from "@/lib/cn";
 
-type WishlistToggleProps = {
+type SaveProductButtonProps = {
   className?: string;
   productId: string;
   productName: string;
 };
 
-export function WishlistToggle({
+export function SaveProductButton({
   className,
   productId,
   productName,
-}: WishlistToggleProps) {
+}: SaveProductButtonProps) {
   const { isSaved, toggle } = useWishlistItem(productId);
 
   return (
-    <button
-      aria-label={
-        isSaved
-          ? `Remove ${productName} from wishlist`
-          : `Save ${productName} to wishlist`
-      }
+    <Button
       aria-pressed={isSaved}
-      className={cn(
-        "relative z-10 inline-flex size-11 items-center justify-center rounded-full transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-        isSaved ? "text-sale" : "text-text-subtle hover:text-sale",
-        className,
-      )}
+      className={className}
       onClick={() => {
         const next = toggle();
 
@@ -41,12 +33,13 @@ export function WishlistToggle({
             : `${productName} removed from wishlist`,
         );
       }}
-      type="button"
+      variant="secondary"
     >
       <Heart
         aria-hidden="true"
-        className={cn("size-5", isSaved ? "fill-current" : null)}
+        className={cn("size-4", isSaved ? "fill-current text-sale" : null)}
       />
-    </button>
+      {isSaved ? "Saved" : "Save for later"}
+    </Button>
   );
 }

@@ -54,7 +54,11 @@ export function ProductCard({
           </Badge>
         ) : null}
 
-        <WishlistToggle className="absolute top-1 right-1" productName={product.name} />
+        <WishlistToggle
+          className="absolute top-1 right-1"
+          productId={product.id}
+          productName={product.name}
+        />
       </div>
 
       <div className="grid gap-1">

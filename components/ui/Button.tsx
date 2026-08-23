@@ -3,8 +3,8 @@ import type { ButtonHTMLAttributes } from "react";
 
 import { cn } from "@/lib/cn";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
-type ButtonSize = "sm" | "md" | "lg";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonSize = "sm" | "md" | "lg";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   isLoading?: boolean;
@@ -29,6 +29,21 @@ const sizes: Record<ButtonSize, string> = {
   lg: "min-h-12 px-5 text-body-sm font-semibold",
 };
 
+const BUTTON_BASE =
+  "inline-flex items-center justify-center gap-2 rounded-md border font-semibold transition-colors duration-150 ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed";
+
+export function buttonStyles(
+  options: {
+    className?: string | undefined;
+    size?: ButtonSize | undefined;
+    variant?: ButtonVariant | undefined;
+  } = {},
+) {
+  const { className, size = "md", variant = "primary" } = options;
+
+  return cn(BUTTON_BASE, variants[variant], sizes[size], className);
+}
+
 export function Button({
   children,
   className,
@@ -41,12 +56,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-md border font-semibold transition-colors duration-150 ease-standard focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed",
-        variants[variant],
-        sizes[size],
-        className,
-      )}
+      className={buttonStyles({ className, size, variant })}
       disabled={disabled || isLoading}
       type={type}
       {...props}

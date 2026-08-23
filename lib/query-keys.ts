@@ -13,6 +13,15 @@ export const queryKeys = {
     suggestions: (term: string) =>
       [...queryKeys.search.all, "suggestions", term.trim().toLowerCase()] as const,
   },
+  wishlist: {
+    all: ["wishlist"] as const,
+    hydration: (productIds: readonly string[]) =>
+      [
+        ...queryKeys.wishlist.all,
+        "hydration",
+        [...productIds].sort().join(","),
+      ] as const,
+  },
 } as const;
 
 export type SearchSuggestionsResult = SearchSuggestions;

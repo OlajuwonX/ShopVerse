@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import shopverseMark from "@/public/logo/shopverse-mark.webp";
 
+import { LiveAnnouncer } from "@/components/feedback/LiveAnnouncer";
 import { DirectionalHeader } from "@/components/navigation/DirectionalHeader";
 import { HeaderActions } from "@/components/navigation/HeaderActions";
 import { MAIN_CONTENT_ID, SkipLink } from "@/components/navigation/SkipLink";
@@ -20,6 +21,7 @@ export default function StorefrontLayout({ children, sidebar }: StorefrontLayout
   return (
     <div className="min-h-screen bg-surface lg:flex lg:h-screen lg:min-h-0 lg:overflow-hidden">
       <SkipLink />
+      <LiveAnnouncer />
 
       <aside className="hidden w-72 shrink-0 border-r border-border lg:block lg:h-screen lg:overflow-y-auto lg:overscroll-contain">
         <div className="px-3 py-6">{sidebar}</div>
