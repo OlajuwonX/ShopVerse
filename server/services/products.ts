@@ -510,3 +510,50 @@ export async function listBrandsForCategory(categorySlug?: string) {
     )
     .orderBy(asc(brands.name));
 }
+
+export type ProductSpecification = {
+  name: string;
+  slug: string;
+  unit: string | null;
+  value: string;
+};
+
+export async function getProductAttributes(
+  productId: string,
+): Promise<ProductSpecification[]> {
+  const result = await db.execute<{
+    name: string;
+    slug: string;
+    unit: string | null;
+    value: string | null;
+  }>(sql`
+    select
+      attribute.name,
+      attribute.slug,
+      attribute.unit,
+      coalesce(
+        opt.value,
+        pav.value_text,
+        pav.value_number::text,
+        case
+          when pav.value_boolean is null then null
+          when pav.value_boolean then 'Yes'
+          else 'No'
+        end
+      ) as value
+    from ${productAttributeValues} pav
+    join ${attributesTable} attribute on attribute.id = pav.attribute_id
+    left join ${attributeOptions} opt on opt.id = pav.option_id
+    where pav.product_id = ${productId}
+    order by attribute.sort_order asc, attribute.name asc
+  `);
+
+  return result.rows
+    .filter((row): row is typeof row & { value: string } => row.value !== null)
+    .map((row) => ({
+      name: row.name,
+      slug: row.slug,
+      unit: row.unit,
+      value: row.value,
+    }));
+}

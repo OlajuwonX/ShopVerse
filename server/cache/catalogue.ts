@@ -18,6 +18,7 @@ import {
   type ResolvedAttribute,
 } from "@/server/services/categories";
 import {
+  getProductAttributes,
   getProductBySlug,
   listBrandsForCategory,
   listProducts,
@@ -161,3 +162,14 @@ export const getCachedProductBySlug = cache(
       },
     )(),
 );
+
+export function getCachedProductAttributes(productId: string) {
+  return unstable_cache(
+    () => getProductAttributes(productId),
+    [CACHE_NAMESPACE, "product-attributes", productId],
+    {
+      revalidate: CATALOGUE_STRUCTURE_TTL_SECONDS,
+      tags: [cacheTags.product(productId), cacheTags.categories()],
+    },
+  )();
+}
