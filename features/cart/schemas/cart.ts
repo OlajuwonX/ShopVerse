@@ -11,6 +11,7 @@ export const cartLineInputSchema = z.object({
 export type CartLineInput = z.infer<typeof cartLineInputSchema>;
 
 export const cartValidationRequestSchema = z.object({
+  deliveryState: z.string().trim().max(64).optional(),
   lines: z.array(cartLineInputSchema).max(CART_MAX_LINES),
 });
 

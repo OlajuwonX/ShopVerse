@@ -14,6 +14,7 @@ import {
   productVariants,
   products,
 } from "@/server/db/schema";
+import { quoteDelivery } from "@/server/services/delivery";
 import { resolveProductPrice } from "@/server/services/products";
 
 export type CartIssue = {
@@ -163,6 +164,7 @@ async function hasPurchasableAlternative(productId: string) {
 
 export async function validateCart(
   requested: readonly CartLineInput[],
+  options: { deliveryState?: string | undefined } = {},
 ): Promise<CartValidation> {
   const bounded = requested.slice(0, CART_MAX_LINES);
 
@@ -309,10 +311,22 @@ export async function validateCart(
     return total + (line.comparePrice - line.unitPrice) * line.quantity;
   }, 0);
 
+  const quote =
+    options.deliveryState === undefined ? null : quoteDelivery(options.deliveryState);
+
+  const purchasable = lines.some((line) => line.purchasable);
+  const delivery = quote && purchasable ? quote.fee : null;
+
   return {
     itemCount: lines.reduce((total, line) => total + line.quantity, 0),
     lines,
     removedLines,
-    totals: { delivery: null, discount: 0, savings, subtotal, total: subtotal },
+    totals: {
+      delivery,
+      discount: 0,
+      savings,
+      subtotal,
+      total: subtotal + (delivery ?? 0),
+    },
   };
 }

@@ -13,6 +13,7 @@ type CartLineProps = {
   line: CartLineView;
   onQuantityChange: (key: string, quantity: number) => void;
   onRemove: (key: string) => void;
+  storedQuantity: number;
 };
 
 function optionSummary(optionValues: Record<string, string>) {
@@ -41,7 +42,12 @@ function LineNotice({
   );
 }
 
-export function CartLine({ line, onQuantityChange, onRemove }: CartLineProps) {
+export function CartLine({
+  line,
+  onQuantityChange,
+  onRemove,
+  storedQuantity,
+}: CartLineProps) {
   const { snapshot } = line;
   const name = snapshot?.productName ?? "This product";
   const options = snapshot ? optionSummary(snapshot.optionValues) : null;
@@ -57,7 +63,7 @@ export function CartLine({ line, onQuantityChange, onRemove }: CartLineProps) {
     (issue) => issue.code === "PRODUCT_UNAVAILABLE",
   );
 
-  const displayQuantity = line.purchasable ? line.quantity : line.requestedQuantity;
+  const displayQuantity = storedQuantity;
   const canIncrease =
     line.purchasable &&
     displayQuantity < Math.min(line.availableQuantity, CART_MAX_LINE_QUANTITY);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 import { toCartLineInputs, type StoredCartLine } from "@/features/cart/schemas/cart";
@@ -12,14 +12,24 @@ export type CartLineView = ValidatedCartLine & {
   priceChanged: boolean;
 };
 
+type CartValidationData = {
+  requestedKeys: string[];
+  requestedState: string | null;
+  validation: CartValidation;
+};
+
 const EMPTY_LINES: CartLineView[] = [];
 
 async function fetchCartValidation(
   lines: readonly StoredCartLine[],
+  deliveryState: string | undefined,
   signal: AbortSignal,
-): Promise<{ requestedKeys: string[]; validation: CartValidation }> {
+): Promise<CartValidationData> {
   const response = await fetch("/api/cart/validate", {
-    body: JSON.stringify({ lines: toCartLineInputs(lines) }),
+    body: JSON.stringify({
+      ...(deliveryState === undefined ? {} : { deliveryState }),
+      lines: toCartLineInputs(lines),
+    }),
     headers: { "content-type": "application/json" },
     method: "POST",
     signal,
@@ -33,6 +43,7 @@ async function fetchCartValidation(
 
   return {
     requestedKeys: lines.map((line) => `${line.productId}:${line.variantId}`),
+    requestedState: deliveryState ?? null,
     validation: (await response.json()) as CartValidation,
   };
 }
@@ -43,24 +54,41 @@ function sameKeys(left: readonly string[], right: readonly string[]) {
   );
 }
 
-export function useCartValidation(lines: readonly StoredCartLine[]) {
+export function useCartValidation(
+  lines: readonly StoredCartLine[],
+  deliveryState?: string | undefined,
+) {
   const requestKeys = useMemo(
-    () => lines.map((line) => `${line.productId}:${line.variantId}:${line.quantity}`),
-    [lines],
+    () => [
+      ...lines.map((line) => `${line.productId}:${line.variantId}:${line.quantity}`),
+      ...(deliveryState === undefined ? [] : [`state=${deliveryState}`]),
+    ],
+    [deliveryState, lines],
   );
 
   const query = useQuery({
     enabled: lines.length > 0,
-    queryFn: ({ signal }) => fetchCartValidation(lines, signal),
+    placeholderData: keepPreviousData,
+    queryFn: ({ signal }) => fetchCartValidation(lines, deliveryState, signal),
     queryKey: queryKeys.cart.validation(requestKeys),
   });
 
-  const resolved = useMemo(() => {
+  const resolved = useMemo<{
+    linesMatched: boolean;
+    lines: CartLineView[];
+    quoteMatched: boolean;
+    validation: CartValidation | null;
+  }>(() => {
     const data = query.data;
     const keys = lines.map((line) => `${line.productId}:${line.variantId}`);
 
     if (!data || !sameKeys(data.requestedKeys, keys)) {
-      return { isMatched: false, lines: EMPTY_LINES, validation: null };
+      return {
+        linesMatched: false,
+        lines: EMPTY_LINES,
+        quoteMatched: false,
+        validation: null,
+      };
     }
 
     const stored = new Map(
@@ -68,7 +96,7 @@ export function useCartValidation(lines: readonly StoredCartLine[]) {
     );
 
     return {
-      isMatched: true,
+      linesMatched: true,
       lines: data.validation.lines.map((line) => {
         const lastSeenUnitPrice = stored.get(line.key)?.lastSeenUnitPrice ?? null;
 
@@ -81,19 +109,25 @@ export function useCartValidation(lines: readonly StoredCartLine[]) {
             lastSeenUnitPrice !== line.unitPrice,
         };
       }),
+      quoteMatched: data.requestedState === (deliveryState ?? null),
       validation: data.validation,
     };
-  }, [lines, query.data]);
+  }, [deliveryState, lines, query.data]);
 
   const blockingIssues = resolved.lines.some(
     (line) => !line.purchasable || line.priceChanged,
   );
 
   return {
-    canCheckout: resolved.isMatched && resolved.lines.length > 0 && !blockingIssues,
+    canCheckout:
+      resolved.linesMatched &&
+      resolved.quoteMatched &&
+      resolved.lines.length > 0 &&
+      !blockingIssues,
     isError: query.isError,
-    isLoading: lines.length > 0 && !resolved.isMatched && !query.isError,
-    isRevalidating: query.isFetching && resolved.isMatched,
+    isLoading: lines.length > 0 && !resolved.linesMatched && !query.isError,
+    isRevalidating:
+      resolved.linesMatched && (query.isFetching || !resolved.quoteMatched),
     lines: resolved.lines,
     refetch: query.refetch,
     totals: resolved.validation?.totals ?? null,

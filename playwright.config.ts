@@ -27,6 +27,7 @@ export default defineConfig({
   },
   webServer: {
     command: `pnpm start --port ${PORT}`,
+    env: { APP_ORIGIN: BASE_URL },
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     url: BASE_URL,

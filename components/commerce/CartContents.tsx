@@ -11,10 +11,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/cn";
-import {
-  useCartValidation,
-  type CartLineView,
-} from "@/features/cart/useCartValidation";
+import { checkoutHref } from "@/lib/routes";
+import { useCartValidation } from "@/features/cart/useCartValidation";
 import { useGuestCart } from "@/features/cart/useGuestCart";
 import type { CartTotals } from "@/server/services/cart";
 
@@ -147,17 +145,15 @@ function OrderSummary({
         </p>
       ) : null}
 
-      <Button
-        aria-label={
-          canCheckout
-            ? "Proceed to checkout, available soon"
-            : "Resolve the issues above to check out"
-        }
-        disabled
-        size="lg"
-      >
-        Proceed to checkout
-      </Button>
+      {canCheckout ? (
+        <Link className={buttonStyles({ size: "lg" })} href={checkoutHref()}>
+          Proceed to checkout
+        </Link>
+      ) : (
+        <Button aria-label="Resolve the issues above to check out" disabled size="lg">
+          Proceed to checkout
+        </Button>
+      )}
     </div>
   );
 }
@@ -244,8 +240,12 @@ export function CartContents() {
     );
   }
 
-  const priceChanges = lines.filter((line: CartLineView) => line.priceChanged);
-  const unpurchasable = lines.filter((line: CartLineView) => !line.purchasable);
+  const storedQuantities = new Map(
+    stored.map((line) => [`${line.productId}:${line.variantId}`, line.quantity]),
+  );
+
+  const priceChanges = lines.filter((line) => line.priceChanged);
+  const unpurchasable = lines.filter((line) => !line.purchasable);
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_22rem] lg:items-start">
@@ -262,6 +262,7 @@ export function CartContents() {
               line={line}
               onQuantityChange={handleQuantityChange}
               onRemove={handleRemove}
+              storedQuantity={storedQuantities.get(line.key) ?? line.quantity}
             />
           ))}
         </ul>

@@ -48,7 +48,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const validation = await validateCart(parsed.data.lines);
+    const validation = await validateCart(parsed.data.lines, {
+      ...(parsed.data.deliveryState === undefined
+        ? {}
+        : { deliveryState: parsed.data.deliveryState }),
+    });
 
     return NextResponse.json(validation, {
       headers: { "cache-control": "no-store" },

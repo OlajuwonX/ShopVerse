@@ -13,3 +13,7 @@ export function wishlistHref() {
 export function cartHref() {
   return "/cart";
 }
+
+export function checkoutHref() {
+  return "/checkout";
+}
