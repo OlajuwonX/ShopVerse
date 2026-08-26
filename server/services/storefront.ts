@@ -77,6 +77,7 @@ export async function listActiveSections(): Promise<StorefrontSection[]> {
       campaignTitle: campaigns.title,
       campaignType: campaigns.type,
       campaignVideoPublicId: campaigns.videoPublicId,
+      categoryName: categories.name,
       categorySlug: categories.slug,
       collectionId: collections.id,
       collectionRules: collections.rules,
@@ -140,6 +141,7 @@ export async function listActiveSections(): Promise<StorefrontSection[]> {
           videoPublicId: row.campaignVideoPublicId,
         }
       : null,
+    categoryName: row.categoryName,
     categorySlug: row.categorySlug,
     collectionId: row.collectionId,
     collectionRules: row.collectionRules,
@@ -212,6 +214,7 @@ export async function listCollectionProducts(
     .select({
       basePrice: products.basePrice,
       brandName: brands.name,
+      categoryName: categories.name,
       categorySlug: categories.slug,
       comparePrice: products.comparePrice,
       id: products.id,
@@ -234,6 +237,28 @@ export async function listCollectionProducts(
         where variant.product_id = ${products.id}
           and variant.status = 'active'
           and stock.available > 0
+      )`,
+      defaultVariantId: sql<string | null>`(
+        select variant.id from ${productVariants} variant
+        where variant.product_id = ${products.id} and variant.status = 'active'
+        order by variant.sku asc
+        limit 1
+      )`,
+      defaultVariantLabel: sql<string | null>`(
+        select coalesce(
+          nullif(
+            (
+              select string_agg(value, ' · ')
+              from jsonb_each_text(variant.option_values)
+            ),
+            ''
+          ),
+          variant.sku
+        )
+        from ${productVariants} variant
+        where variant.product_id = ${products.id} and variant.status = 'active'
+        order by variant.sku asc
+        limit 1
       )`,
       name: products.name,
       rating: products.rating,
@@ -260,8 +285,11 @@ export async function listCollectionProducts(
   return rows.map((row) => ({
     basePrice: row.basePrice,
     brandName: row.brandName,
+    categoryName: row.categoryName,
     categorySlug: row.categorySlug,
     comparePrice: row.comparePrice,
+    defaultVariantId: row.defaultVariantId,
+    defaultVariantLabel: row.variantCount === 1 ? null : row.defaultVariantLabel,
     discountPercent: discountPercent(row.basePrice, row.comparePrice),
     id: row.id,
     imageAlt: row.imageAlt,

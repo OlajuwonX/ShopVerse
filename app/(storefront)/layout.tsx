@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import shopverseMark from "@/public/logo/shopverse-mark.webp";
 
-import { LiveAnnouncer } from "@/components/feedback/LiveAnnouncer";
+import { Toaster } from "@/components/feedback/Toaster";
 import { DirectionalHeader } from "@/components/navigation/DirectionalHeader";
 import { HeaderActions } from "@/components/navigation/HeaderActions";
 import { SidebarBrand } from "@/components/navigation/SidebarBrand";
@@ -22,7 +22,7 @@ export default function StorefrontLayout({ children, sidebar }: StorefrontLayout
   return (
     <div className="min-h-screen bg-surface lg:flex lg:h-screen lg:min-h-0 lg:overflow-hidden">
       <SkipLink />
-      <LiveAnnouncer />
+      <Toaster />
 
       <aside className="hidden w-72 shrink-0 border-r border-border lg:flex lg:h-screen lg:flex-col">
         <div className="shrink-0 border-b border-border bg-surface px-3 py-4">

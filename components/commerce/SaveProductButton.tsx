@@ -2,7 +2,7 @@
 
 import { Heart } from "lucide-react";
 
-import { announce } from "@/components/feedback/announcer";
+import { notify } from "@/components/feedback/toast";
 import { Button } from "@/components/ui/Button";
 import { useWishlistItem } from "@/features/wishlist/useGuestWishlist";
 import { cn } from "@/lib/cn";
@@ -27,11 +27,13 @@ export function SaveProductButton({
       onClick={() => {
         const next = toggle();
 
-        announce(
-          next
+        notify({
+          description: next ? "Find it again under Wishlist in the header." : undefined,
+          title: next
             ? `${productName} saved to wishlist`
             : `${productName} removed from wishlist`,
-        );
+          tone: next ? "success" : "info",
+        });
       }}
       variant="secondary"
     >

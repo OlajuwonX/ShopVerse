@@ -10,7 +10,7 @@ import {
   emptyDeliveryValues,
   type DeliveryValues,
 } from "@/components/checkout/DeliveryFields";
-import { announce } from "@/components/feedback/announcer";
+import { notify } from "@/components/feedback/toast";
 import { Button, buttonStyles } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -65,13 +65,18 @@ export function CheckoutForm() {
 
   useEffect(() => {
     if (state.formError) {
-      announce(state.formError);
+      notify({ title: state.formError, tone: "error" });
     }
   }, [state.formError]);
 
   useEffect(() => {
     if (state.status === "validated") {
-      announce("Delivery details accepted. Payment is available soon.");
+      notify({
+        description:
+          "We have your delivery address and your order total. Card payment opens here soon.",
+        title: "Delivery details confirmed",
+        tone: "success",
+      });
     }
   }, [state.status]);
 
@@ -184,16 +189,6 @@ export function CheckoutForm() {
             role="alert"
           >
             {state.formError}
-          </p>
-        ) : null}
-
-        {state.status === "validated" ? (
-          <p
-            className="rounded-md bg-success-soft p-3 text-body-sm font-medium text-success"
-            role="status"
-          >
-            Your delivery details passed validation and your cart is still purchasable.
-            Payment is wired up in the next stage.
           </p>
         ) : null}
 

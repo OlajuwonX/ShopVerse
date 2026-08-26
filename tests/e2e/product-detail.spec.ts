@@ -109,7 +109,7 @@ test.describe("product detail", () => {
   test("keeps a sticky purchase bar on mobile only", async ({ page }, testInfo) => {
     await page.goto(SIMPLE_PRODUCT);
 
-    const bars = page.locator("div.fixed.inset-x-0.bottom-0");
+    const bars = page.getByRole("main").locator("div.fixed.inset-x-0.bottom-0");
 
     if (testInfo.project.name === "mobile") {
       await expect(bars.first()).toBeVisible();

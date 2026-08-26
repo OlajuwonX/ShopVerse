@@ -14,7 +14,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "border-brand bg-brand text-white hover:bg-brand-strong active:bg-brand-strong focus-visible:outline-brand disabled:border-border-strong disabled:bg-surface-muted disabled:text-text-muted",
+    "border-surface-inverse bg-surface-inverse text-surface hover:bg-text hover:border-text active:bg-text focus-visible:outline-brand disabled:border-border-strong disabled:bg-surface-muted disabled:text-text-muted",
   secondary:
     "border-border bg-surface-raised text-text hover:border-border-strong hover:bg-surface-muted active:bg-surface-muted focus-visible:outline-brand disabled:border-border disabled:bg-surface-muted disabled:text-text-muted",
   ghost:

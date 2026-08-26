@@ -8,12 +8,12 @@ function grid(page: Page, name: string): Locator {
 }
 
 function cards(gridLocator: Locator) {
-  return gridLocator.locator("a[href^='/products/']");
+  return gridLocator.locator("h3 a[href^='/products/']");
 }
 
 function hrefsIn(gridLocator: Locator) {
   return gridLocator
-    .locator("a[href^='/products/']")
+    .locator("h3 a[href^='/products/']")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href") ?? ""));
 }
 

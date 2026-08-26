@@ -2,7 +2,7 @@
 
 import { ShoppingBag } from "lucide-react";
 
-import { announce } from "@/components/feedback/announcer";
+import { notify } from "@/components/feedback/toast";
 import { Button } from "@/components/ui/Button";
 import { CART_MAX_LINE_QUANTITY } from "@/constants/cart";
 import { useGuestCart } from "@/features/cart/useGuestCart";
@@ -62,20 +62,30 @@ export function AddToCartButton({
         });
 
         if (reason === "cart_full") {
-          announce("Your cart is full. Remove something before adding more.");
+          notify({
+            description: "Remove something before adding more.",
+            title: "Your cart is full",
+            tone: "error",
+          });
 
           return;
         }
 
         if (reason === "line_full") {
-          announce(
-            `You already have the maximum of ${CART_MAX_LINE_QUANTITY} of ${productName} in your cart`,
-          );
+          notify({
+            description: `You already have the maximum of ${CART_MAX_LINE_QUANTITY} in your cart.`,
+            title: `That is as many as we can hold`,
+            tone: "error",
+          });
 
           return;
         }
 
-        announce(`${productName} added to cart`);
+        notify({
+          description: "Open your cart when you are ready to check out.",
+          title: `${productName} added to cart`,
+          tone: "success",
+        });
       }}
       size="lg"
     >

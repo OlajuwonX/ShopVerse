@@ -27,6 +27,8 @@
   --color-danger-soft: #fee2e2;
   --color-price: #0f766e;
   --color-sale: #be123c;
+  --color-surface-card: #f5ebdc;
+  --color-surface-card-media: #fdfaf5;
 
   --text-display: 3.5rem;
   --text-display--line-height: 0.96;
@@ -99,6 +101,8 @@
   --color-danger-soft: #4c0d13;
   --color-price: #5eead4;
   --color-sale: #fb7185;
+  --color-surface-card: #221c15;
+  --color-surface-card-media: #191512;
 }
 
 @media (min-width: 640px) {
@@ -174,6 +178,18 @@ body {
 
   ::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

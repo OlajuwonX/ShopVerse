@@ -11,11 +11,16 @@ type GalleryImage = {
 };
 
 type ProductGalleryProps = {
+  discountPercent?: number | null;
   images: readonly GalleryImage[];
   productName: string;
 };
 
-export function ProductGallery({ images, productName }: ProductGalleryProps) {
+export function ProductGallery({
+  discountPercent = null,
+  images,
+  productName,
+}: ProductGalleryProps) {
   const trackRef = useRef<HTMLUListElement>(null);
   const labelId = useId();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -77,29 +82,37 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
   }, [slides.length]);
 
   return (
-    <div className="grid gap-3">
-      <ul
-        aria-labelledby={labelId}
-        className="flex snap-x snap-mandatory overflow-x-auto rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-        ref={trackRef}
-        tabIndex={0}
-      >
-        {slides.map((image, index) => (
-          <li
-            className="w-full shrink-0 snap-center"
-            key={`${image.publicId}-${index}`}
-          >
-            <CloudinaryImage
-              alt={index === 0 ? image.alt : `${productName}, image ${index + 1}`}
-              displayWidth={720}
-              priority={index === 0}
-              publicId={image.publicId.length > 0 ? image.publicId : null}
-              ratio="square"
-              sizes="(min-width: 1024px) 40vw, 92vw"
-            />
-          </li>
-        ))}
-      </ul>
+    <div className="flex flex-col gap-3 lg:flex-row-reverse lg:items-start">
+      <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-border bg-surface-card-media">
+        <ul
+          aria-labelledby={labelId}
+          className="flex snap-x snap-mandatory overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          ref={trackRef}
+          tabIndex={0}
+        >
+          {slides.map((image, index) => (
+            <li
+              className="w-full shrink-0 snap-center"
+              key={`${image.publicId}-${index}`}
+            >
+              <CloudinaryImage
+                alt={index === 0 ? image.alt : `${productName}, image ${index + 1}`}
+                displayWidth={720}
+                priority={index === 0}
+                publicId={image.publicId.length > 0 ? image.publicId : null}
+                ratio="square"
+                sizes="(min-width: 1024px) 36vw, 92vw"
+              />
+            </li>
+          ))}
+        </ul>
+
+        {discountPercent !== null ? (
+          <span className="absolute top-3 left-3 rounded-md bg-sale px-2 py-1 text-caption font-bold text-white">
+            −{discountPercent}%
+          </span>
+        ) : null}
+      </div>
 
       <p className="sr-only" id={labelId}>
         {productName} gallery, {slides.length}{" "}
@@ -107,14 +120,19 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       </p>
 
       {slides.length > 1 ? (
-        <ul aria-label="Choose image" className="flex flex-wrap gap-2">
+        <ul
+          aria-label="Choose image"
+          className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible"
+        >
           {slides.map((image, index) => (
-            <li key={`thumb-${image.publicId}-${index}`}>
+            <li className="shrink-0" key={`thumb-${image.publicId}-${index}`}>
               <button
                 aria-current={index === activeIndex}
                 className={cn(
-                  "block size-16 overflow-hidden rounded-md border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-                  index === activeIndex ? "border-brand" : "border-border",
+                  "block size-16 overflow-hidden rounded-lg border-2 bg-surface-card-media transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+                  index === activeIndex
+                    ? "border-brand"
+                    : "border-border hover:border-border-strong",
                 )}
                 onClick={() => {
                   showAt(index);

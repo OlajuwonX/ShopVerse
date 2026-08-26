@@ -44,8 +44,11 @@ export const CATALOGUE_PRICE_CEILING = 5_000_000_00;
 export type ProductListItem = {
   basePrice: number;
   brandName: string;
+  categoryName: string;
   categorySlug: string;
   comparePrice: number | null;
+  defaultVariantId: string | null;
+  defaultVariantLabel: string | null;
   discountPercent: number | null;
   id: string;
   imageAlt: string | null;
@@ -155,6 +158,7 @@ const inStockExpression = sql<boolean>`exists (
 const productListSelection = {
   basePrice: products.basePrice,
   brandName: brands.name,
+  categoryName: categories.name,
   categorySlug: categories.slug,
   comparePrice: products.comparePrice,
   createdAt: products.createdAt,
@@ -169,6 +173,40 @@ const productListSelection = {
     select image.cloudinary_public_id from ${productImages} image
     where image.product_id = ${products.id}
     order by image.is_primary desc, image.sort_order asc
+    limit 1
+  )`,
+  defaultVariantComparePrice: sql<number | null>`(
+    select variant.compare_price from ${productVariants} variant
+    where variant.product_id = ${products.id} and variant.status = 'active'
+    order by variant.sku asc
+    limit 1
+  )`,
+  defaultVariantId: sql<string | null>`(
+    select variant.id from ${productVariants} variant
+    where variant.product_id = ${products.id} and variant.status = 'active'
+    order by variant.sku asc
+    limit 1
+  )`,
+  defaultVariantLabel: sql<string | null>`(
+    select coalesce(
+      nullif(
+        (
+          select string_agg(value, ' · ')
+          from jsonb_each_text(variant.option_values)
+        ),
+        ''
+      ),
+      variant.sku
+    )
+    from ${productVariants} variant
+    where variant.product_id = ${products.id} and variant.status = 'active'
+    order by variant.sku asc
+    limit 1
+  )`,
+  defaultVariantPrice: sql<number | null>`(
+    select variant.price from ${productVariants} variant
+    where variant.product_id = ${products.id} and variant.status = 'active'
+    order by variant.sku asc
     limit 1
   )`,
   inStock: inStockExpression,
@@ -186,9 +224,14 @@ const productListSelection = {
 type ProductListRow = {
   basePrice: number;
   brandName: string;
+  categoryName: string;
   categorySlug: string;
   comparePrice: number | null;
   createdAt: Date;
+  defaultVariantComparePrice: number | null;
+  defaultVariantId: string | null;
+  defaultVariantLabel: string | null;
+  defaultVariantPrice: number | null;
   id: string;
   imageAlt: string | null;
   imagePublicId: string | null;
@@ -202,12 +245,24 @@ type ProductListRow = {
 };
 
 function toProductListItem(row: ProductListRow): ProductListItem {
-  return {
+  const isSingleVariant = row.variantCount === 1;
+
+  const price = resolveProductPrice({
     basePrice: row.basePrice,
-    brandName: row.brandName,
-    categorySlug: row.categorySlug,
     comparePrice: row.comparePrice,
-    discountPercent: discountPercent(row.basePrice, row.comparePrice),
+    variantComparePrice: isSingleVariant ? row.defaultVariantComparePrice : null,
+    variantPrice: isSingleVariant ? row.defaultVariantPrice : null,
+  });
+
+  return {
+    basePrice: price.price,
+    brandName: row.brandName,
+    categoryName: row.categoryName,
+    categorySlug: row.categorySlug,
+    comparePrice: price.comparePrice,
+    defaultVariantId: row.defaultVariantId,
+    defaultVariantLabel: isSingleVariant ? null : row.defaultVariantLabel,
+    discountPercent: price.discountPercent,
     id: row.id,
     imageAlt: row.imageAlt,
     imagePublicId: row.imagePublicId,

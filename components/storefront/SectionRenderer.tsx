@@ -58,7 +58,7 @@ export function SectionRenderer({
             ) : null}
             {campaign.href && campaign.content.ctaLabel ? (
               <Link
-                className="mt-1 inline-flex min-h-11 w-fit items-center rounded-md bg-brand px-4 text-label font-semibold text-white hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                className="mt-1 inline-flex min-h-11 w-fit items-center rounded-md bg-surface-inverse px-4 text-label font-semibold text-surface hover:bg-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                 href={campaign.href}
               >
                 {campaign.content.ctaLabel}

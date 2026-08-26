@@ -227,7 +227,7 @@ export function SearchInput({
         ) : null}
 
         <button
-          className="absolute right-1 inline-flex min-h-9 items-center rounded-full bg-brand px-4 text-label font-semibold text-white transition-colors hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="absolute right-1 inline-flex min-h-9 items-center rounded-full bg-surface-inverse px-4 text-label font-semibold text-surface transition-colors hover:bg-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           type="submit"
         >
           Search

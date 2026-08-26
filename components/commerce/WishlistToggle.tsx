@@ -2,7 +2,7 @@
 
 import { Heart } from "lucide-react";
 
-import { announce } from "@/components/feedback/announcer";
+import { notify } from "@/components/feedback/toast";
 import { useWishlistItem } from "@/features/wishlist/useGuestWishlist";
 import { cn } from "@/lib/cn";
 
@@ -28,24 +28,26 @@ export function WishlistToggle({
       }
       aria-pressed={isSaved}
       className={cn(
-        "relative z-10 inline-flex size-11 items-center justify-center rounded-full transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+        "z-10 inline-flex size-11 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
         isSaved ? "text-sale" : "text-text-subtle hover:text-sale",
         className,
       )}
       onClick={() => {
         const next = toggle();
 
-        announce(
-          next
+        notify({
+          description: next ? "Find it again under Wishlist in the header." : undefined,
+          title: next
             ? `${productName} saved to wishlist`
             : `${productName} removed from wishlist`,
-        );
+          tone: next ? "success" : "info",
+        });
       }}
       type="button"
     >
       <Heart
         aria-hidden="true"
-        className={cn("size-5", isSaved ? "fill-current" : null)}
+        className={cn("size-4.5", isSaved ? "fill-current" : null)}
       />
     </button>
   );

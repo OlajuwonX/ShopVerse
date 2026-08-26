@@ -5,7 +5,7 @@ import { useCallback } from "react";
 
 import { CartLine } from "@/components/commerce/CartLine";
 import { formatMoney, Money } from "@/components/commerce/Money";
-import { announce } from "@/components/feedback/announcer";
+import { notify } from "@/components/feedback/toast";
 import { Button, buttonStyles } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -175,7 +175,10 @@ export function CartContents() {
       const line = lines.find((entry) => entry.key === key);
 
       remove(key);
-      announce(`${line?.snapshot?.productName ?? "Item"} removed from cart`);
+      notify({
+        title: `${line?.snapshot?.productName ?? "Item"} removed from cart`,
+        tone: "info",
+      });
     },
     [lines, remove],
   );
@@ -188,7 +191,11 @@ export function CartContents() {
     );
 
     acknowledgePrices(prices);
-    announce("New prices accepted");
+    notify({
+      description: "Your total now reflects the current prices.",
+      title: "New prices accepted",
+      tone: "success",
+    });
   }, [acknowledgePrices, lines]);
 
   if (stored.length === 0) {

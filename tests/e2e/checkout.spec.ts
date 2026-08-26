@@ -199,7 +199,9 @@ test.describe("checkout", () => {
     await expect(page.getByRole("main").getByRole("alert")).toContainText(
       /could not start your checkout/i,
     );
-    await expect(page.getByText(/passed validation/i)).toBeHidden();
+    await expect(page.getByRole("log", { name: "Notifications" })).not.toContainText(
+      "Delivery details confirmed",
+    );
   });
 
   test("a valid submission passes server validation", async ({ page }) => {
@@ -212,7 +214,9 @@ test.describe("checkout", () => {
     await page.waitForTimeout(2100);
     await payButton(page).click();
 
-    await expect(page.getByText(/passed validation/i)).toBeVisible();
+    await expect(page.getByRole("log", { name: "Notifications" })).toContainText(
+      "Delivery details confirmed",
+    );
   });
 
   test("a filled honeypot is rejected", async ({ page }) => {
@@ -238,7 +242,9 @@ test.describe("checkout", () => {
     await expect(page.getByRole("main").getByRole("alert")).toContainText(
       /could not start your checkout/i,
     );
-    await expect(page.getByText(/passed validation/i)).toBeHidden();
+    await expect(page.getByRole("log", { name: "Notifications" })).not.toContainText(
+      "Delivery details confirmed",
+    );
   });
 
   test("the honeypot is hidden from assistive technology and tab order", async ({

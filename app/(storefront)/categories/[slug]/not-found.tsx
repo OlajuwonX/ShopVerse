@@ -8,7 +8,7 @@ export default function CategoryNotFound() {
       <EmptyState
         action={
           <Link
-            className="inline-flex min-h-11 items-center rounded-md bg-brand px-4 text-label font-semibold text-white hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex min-h-11 items-center rounded-md bg-surface-inverse px-4 text-label font-semibold text-surface hover:bg-text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             href="/"
           >
             Shop now

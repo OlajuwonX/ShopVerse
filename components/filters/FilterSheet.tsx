@@ -112,7 +112,7 @@ export function FilterSheet({ facets }: { facets: FilterFacets }) {
 
             <div className="border-t border-border px-4 py-3">
               <button
-                className="min-h-11 w-full rounded-md bg-brand px-4 text-label font-semibold text-white hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                className="min-h-11 w-full rounded-md bg-surface-inverse px-4 text-label font-semibold text-surface hover:bg-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                 onClick={() => {
                   setIsOpen(false);
                   triggerRef.current?.focus();

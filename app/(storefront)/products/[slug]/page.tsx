@@ -10,7 +10,7 @@ import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { serverEnv } from "@/config/env";
 import { buildCategoryBreadcrumbs } from "@/features/categories/navigation";
 import { buildCloudinaryUrl } from "@/lib/media/cloudinary-url";
-import { toMajorUnits } from "@/lib/money";
+import { discountPercent, toMajorUnits } from "@/lib/money";
 import { categoryHref, productHref } from "@/lib/routes";
 import {
   getCachedCategoryAncestors,
@@ -130,7 +130,11 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
       <Breadcrumb items={breadcrumbs} />
 
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        <ProductGallery images={product.images} productName={product.name} />
+        <ProductGallery
+          discountPercent={discountPercent(product.basePrice, product.comparePrice)}
+          images={product.images}
+          productName={product.name}
+        />
 
         <div className="grid content-start gap-5">
           <div className="grid gap-1">
@@ -157,10 +161,6 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
             productId={product.id}
             productName={product.name}
           />
-
-          <p className="text-body-sm text-text-muted">
-            Delivered nationwide. Delivery cost is calculated at checkout.
-          </p>
         </div>
       </div>
 
