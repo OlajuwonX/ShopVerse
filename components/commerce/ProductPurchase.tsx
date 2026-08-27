@@ -206,15 +206,13 @@ export function ProductPurchase({
           productName={productName}
           quantity={quantity}
         />
-        <div className="hidden flex-1 lg:block">
-          <PurchaseCta
-            className="w-full"
-            inStock={inStock}
-            needsSelection={needsSelection}
-            onAdd={addToCart}
-            productName={productName}
-          />
-        </div>
+        <PurchaseCta
+          className="hidden flex-1 lg:inline-flex"
+          inStock={inStock}
+          needsSelection={needsSelection}
+          onAdd={addToCart}
+          productName={productName}
+        />
       </div>
 
       <ul className="grid divide-y divide-border rounded-xl border border-border">

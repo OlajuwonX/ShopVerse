@@ -6,6 +6,7 @@ import { notify } from "@/components/feedback/toast";
 import { CART_MAX_LINE_QUANTITY } from "@/constants/cart";
 import { cartLineKey } from "@/features/cart/schemas/cart";
 import { useGuestCart } from "@/features/cart/useGuestCart";
+import { cn } from "@/lib/cn";
 
 const CTA_CLASS =
   "relative z-10 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg px-2 text-caption font-bold whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:gap-2 sm:px-4 sm:text-label sm:tracking-wide sm:uppercase";
@@ -36,7 +37,7 @@ export function ProductCardCta({
     return (
       <span
         aria-hidden="true"
-        className={`${CTA_CLASS} cursor-not-allowed bg-surface-muted text-text-muted`}
+        className={cn(CTA_CLASS, "cursor-not-allowed bg-surface-muted text-text-muted")}
       >
         Out of stock
       </span>
@@ -92,7 +93,7 @@ export function ProductCardCta({
   return (
     <button
       aria-label={`Add ${productName} to cart`}
-      className={`${CTA_CLASS} bg-surface-inverse text-surface hover:bg-text`}
+      className={cn(CTA_CLASS, "bg-surface-inverse text-surface hover:bg-text")}
       onClick={() => {
         const reason = add({
           lastSeenUnitPrice: unitPrice,

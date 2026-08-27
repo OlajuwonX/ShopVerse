@@ -169,12 +169,10 @@ export function SearchInput({
         <label className="sr-only" htmlFor={id}>
           Search anything on ShopVerse
         </label>
-
         <Search
           aria-hidden="true"
           className="pointer-events-none absolute left-3 size-4 text-text-subtle"
         />
-
         <input
           aria-activedescendant={
             activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined
@@ -183,7 +181,7 @@ export function SearchInput({
           aria-controls={hasPanel ? listboxId : undefined}
           aria-expanded={hasPanel}
           autoComplete="off"
-          className="min-h-11 w-full rounded-full border border-border bg-surface py-2 pr-32 pl-9 text-body-sm text-text transition-colors placeholder:text-text-subtle focus-visible:border-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="min-h-11 w-full rounded-full border border-border bg-surface py-2 pr-16 pl-9 text-body-sm text-text transition-colors placeholder:text-text-subtle focus-visible:border-text focus-visible:outline-1.5  focus-visible:outline-text"
           enterKeyHint="search"
           id={id}
           maxLength={SEARCH_MAX_LENGTH}
@@ -200,21 +198,19 @@ export function SearchInput({
           placeholder="Search anything on ShopVerse"
           ref={inputRef}
           role="combobox"
-          type="search"
+          type="text"
           value={term}
         />
-
         {isLoading ? (
           <Loader2
             aria-hidden="true"
-            className="absolute right-28 size-4 animate-spin text-text-subtle"
+            className="absolute right-10 size-4 animate-spin text-text-subtle"
           />
         ) : null}
-
         {term.length > 0 ? (
           <button
             aria-label="Clear search"
-            className="absolute right-20 inline-flex size-8 items-center justify-center rounded-full text-text-subtle hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="absolute right-1 inline-flex size-8 items-center justify-center rounded-full text-text-subtle hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
             onClick={() => {
               setTerm("");
               setActiveIndex(-1);
@@ -225,13 +221,6 @@ export function SearchInput({
             <X aria-hidden="true" className="size-4" />
           </button>
         ) : null}
-
-        <button
-          className="absolute right-1 inline-flex min-h-9 items-center rounded-full bg-surface-inverse px-4 text-label font-semibold text-surface transition-colors hover:bg-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-          type="submit"
-        >
-          Search
-        </button>
       </form>
 
       {hasPanel ? (

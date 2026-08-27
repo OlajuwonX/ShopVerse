@@ -136,7 +136,12 @@ test.describe("guest wishlist", () => {
       ],
     );
 
+    const hydrated = page.waitForResponse(
+      (response) => response.url().includes("/api/wishlist") && response.ok(),
+    );
+
     await page.goto("/wishlist");
+    await hydrated;
 
     await expect(
       page.getByRole("heading", { name: "Nothing saved yet" }),
