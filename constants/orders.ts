@@ -1,0 +1,3 @@
+export const RESERVATION_MINUTES = 30;
+
+export const RESERVATION_SWEEP_BATCH = 200;

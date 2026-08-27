@@ -20,6 +20,7 @@ import { assertSameOrigin } from "@/server/security/origin";
 import { getRequestContext } from "@/server/security/request-context";
 import { validateCart } from "@/server/services/cart";
 import { quoteDelivery } from "@/server/services/delivery";
+import { createPendingOrder, type CreateOrderIssue } from "@/server/services/orders";
 
 const GENERIC_FAILURE =
   "We could not start your checkout. Check your details and try again.";
@@ -28,6 +29,28 @@ const CART_CHANGED =
   "Something in your cart changed. Review the updated cart and try again.";
 
 const TOO_MANY = "Too many checkout attempts. Wait a few minutes before trying again.";
+
+function describeIssues(issues: readonly CreateOrderIssue[]) {
+  const first = issues[0];
+
+  if (!first) {
+    return CART_CHANGED;
+  }
+
+  const name = first.productName ?? "An item in your cart";
+
+  if (first.code === "INSUFFICIENT_STOCK") {
+    return first.available === 0
+      ? `${name} sold out while you were checking out. Remove it and try again.`
+      : `Only ${first.available} of ${name} remain. Reduce the quantity and try again.`;
+  }
+
+  if (first.code === "VARIANT_UNAVAILABLE") {
+    return `That option of ${name} is no longer sold. Choose another option and try again.`;
+  }
+
+  return `${name} is no longer available. Remove it and try again.`;
+}
 
 function invalid(
   fieldErrors: CheckoutState["fieldErrors"],
@@ -149,21 +172,56 @@ async function runCheckout(formData: FormData): Promise<CheckoutState> {
     return invalid({ state: "We do not deliver to that state yet" }, GENERIC_FAILURE);
   }
 
+  const created = await createPendingOrder({
+    checkoutAttemptId: parsed.data.checkoutAttemptId,
+    delivery: parsed.data,
+    lines: parsed.data.lines,
+  });
+
+  if (created.status === "unavailable") {
+    await writeAuditLog({
+      action: "checkout.unavailable",
+      actorType: "system",
+      after: {
+        attemptId: parsed.data.checkoutAttemptId,
+        issues: created.issues.map((issue) => issue.code),
+      },
+      targetType: "checkout",
+    });
+
+    return {
+      fieldErrors: {},
+      formError: describeIssues(created.issues),
+      status: "cart_changed",
+      validatedAttemptId: null,
+    };
+  }
+
+  if (created.status === "rejected") {
+    return invalid({}, created.reason);
+  }
+
   await writeAuditLog({
-    action: "checkout.validated",
+    action: created.status === "replayed" ? "checkout.replayed" : "checkout.ordered",
     actorType: "system",
     after: {
       attemptId: parsed.data.checkoutAttemptId,
       deliveryZone: delivery.zone,
       lineCount: validation.lines.length,
+      orderReference: created.order.reference,
     },
-    targetType: "checkout",
+    targetId: created.order.id,
+    targetType: "order",
   });
 
   return {
     fieldErrors: {},
     formError: null,
-    status: "validated",
+    order: {
+      grandTotal: created.order.grandTotal,
+      reference: created.order.reference,
+    },
+    status: "ordered",
     validatedAttemptId: parsed.data.checkoutAttemptId,
   };
 }

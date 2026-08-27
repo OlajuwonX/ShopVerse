@@ -91,10 +91,16 @@ export const checkoutFields = [
 
 export type CheckoutField = (typeof checkoutFields)[number];
 
+export type PlacedOrder = {
+  grandTotal: number;
+  reference: string;
+};
+
 export type CheckoutState = {
   fieldErrors: Partial<Record<CheckoutField, string>>;
   formError: string | null;
-  status: "idle" | "invalid" | "cart_changed" | "validated";
+  order?: PlacedOrder;
+  status: "idle" | "invalid" | "cart_changed" | "ordered";
   validatedAttemptId: string | null;
 };
 

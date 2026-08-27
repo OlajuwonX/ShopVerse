@@ -19,6 +19,7 @@ import {
   CHECKOUT_HONEYPOT_FIELD,
   CHECKOUT_RENDERED_AT_FIELD,
 } from "@/constants/checkout";
+import { RESERVATION_MINUTES } from "@/constants/orders";
 import { toCartLineInputs } from "@/features/cart/schemas/cart";
 import { useCartValidation } from "@/features/cart/useCartValidation";
 import { useGuestCart } from "@/features/cart/useGuestCart";
@@ -70,15 +71,14 @@ export function CheckoutForm() {
   }, [state.formError]);
 
   useEffect(() => {
-    if (state.status === "validated") {
+    if (state.status === "ordered" && state.order) {
       notify({
-        description:
-          "We have your delivery address and your order total. Card payment opens here soon.",
-        title: "Delivery details confirmed",
+        description: `We are holding your items while payment opens. Keep your reference ${state.order.reference}.`,
+        title: `Order ${state.order.reference} placed`,
         tone: "success",
       });
     }
-  }, [state.status]);
+  }, [state.order, state.status]);
 
   if (stored.length === 0) {
     return (
@@ -190,6 +190,22 @@ export function CheckoutForm() {
           >
             {state.formError}
           </p>
+        ) : null}
+
+        {state.status === "ordered" && state.order ? (
+          <section
+            className="grid gap-2 rounded-lg border border-success bg-success-soft p-4"
+            aria-labelledby="order-placed"
+          >
+            <h2 className="text-heading-3 font-bold text-success" id="order-placed">
+              Order {state.order.reference} placed
+            </h2>
+            <p className="text-body-sm text-text">
+              We are holding your items for {RESERVATION_MINUTES} minutes while the
+              payment step opens. Nothing has been charged yet. Keep your reference safe
+              — you will need it to track this order.
+            </p>
+          </section>
         ) : null}
 
         <DeliveryFields

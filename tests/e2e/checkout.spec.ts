@@ -199,9 +199,7 @@ test.describe("checkout", () => {
     await expect(page.getByRole("main").getByRole("alert")).toContainText(
       /could not start your checkout/i,
     );
-    await expect(page.getByRole("log", { name: "Notifications" })).not.toContainText(
-      "Delivery details confirmed",
-    );
+    await expect(page.getByRole("heading", { name: /^Order SV-/ })).toBeHidden();
   });
 
   test("a valid submission passes server validation", async ({ page }) => {
@@ -214,9 +212,32 @@ test.describe("checkout", () => {
     await page.waitForTimeout(2100);
     await payButton(page).click();
 
+    await expect(page.getByRole("heading", { name: /^Order SV-/ })).toBeVisible();
     await expect(page.getByRole("log", { name: "Notifications" })).toContainText(
-      "Delivery details confirmed",
+      /^Order SV-[2-9A-HJ-NP-Z]{8} placed/,
     );
+  });
+
+  test("resubmitting the same checkout attempt replays one order (PAY-01)", async ({
+    page,
+  }) => {
+    await addProduct(page);
+    await page.goto("/checkout");
+
+    await fillDelivery(page);
+    await chooseState(page, "Lagos");
+
+    await page.waitForTimeout(2100);
+    await payButton(page).click();
+
+    const heading = page.getByRole("heading", { name: /^Order SV-/ });
+    await expect(heading).toBeVisible();
+
+    const first = await heading.textContent();
+
+    await payButton(page).click();
+
+    await expect(heading).toHaveText(first ?? "");
   });
 
   test("a filled honeypot is rejected", async ({ page }) => {
@@ -242,9 +263,7 @@ test.describe("checkout", () => {
     await expect(page.getByRole("main").getByRole("alert")).toContainText(
       /could not start your checkout/i,
     );
-    await expect(page.getByRole("log", { name: "Notifications" })).not.toContainText(
-      "Delivery details confirmed",
-    );
+    await expect(page.getByRole("heading", { name: /^Order SV-/ })).toBeHidden();
   });
 
   test("the honeypot is hidden from assistive technology and tab order", async ({
