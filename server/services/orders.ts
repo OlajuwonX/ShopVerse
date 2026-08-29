@@ -214,6 +214,23 @@ async function reserveLines(
   orderId: string,
   expiresAt: Date,
 ) {
+  const reservations: {
+    expiresAt: Date;
+    orderId: string;
+    quantity: number;
+    status: "active";
+    variantId: string;
+  }[] = [];
+
+  const movements: {
+    after: number;
+    before: number;
+    delta: number;
+    orderId: string;
+    reason: "reservation_created";
+    variantId: string;
+  }[] = [];
+
   for (const line of priced) {
     const reserved = await tx
       .update(inventory)
@@ -251,7 +268,7 @@ async function reserveLines(
       ]);
     }
 
-    await tx.insert(inventoryReservations).values({
+    reservations.push({
       expiresAt,
       orderId,
       quantity: line.quantity,
@@ -259,7 +276,7 @@ async function reserveLines(
       variantId: line.variantId,
     });
 
-    await tx.insert(stockMovements).values({
+    movements.push({
       after,
       before: after + line.quantity,
       delta: -line.quantity,
@@ -268,6 +285,9 @@ async function reserveLines(
       variantId: line.variantId,
     });
   }
+
+  await tx.insert(inventoryReservations).values(reservations);
+  await tx.insert(stockMovements).values(movements);
 }
 
 export async function createPendingOrder(

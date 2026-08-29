@@ -15,6 +15,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    fileParallelism: false,
     globals: false,
     hookTimeout: 30_000,
     exclude: ["tests/e2e/**"],

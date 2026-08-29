@@ -6,6 +6,7 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
 export default defineConfig({
   expect: { timeout: 10_000 },
   forbidOnly: !!process.env.CI,
+  globalTeardown: "./tests/e2e/global-teardown.ts",
   fullyParallel: false,
   projects: [
     {

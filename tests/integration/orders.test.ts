@@ -1,5 +1,5 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { RESERVATION_MINUTES } from "@/constants/orders";
 import type { DeliveryDetails } from "@/features/checkout/schemas/checkout";
@@ -162,6 +162,56 @@ afterEach(async () => {
       await restore();
     }
   }
+});
+
+afterAll(async () => {
+  if (!hasRealDatabase) {
+    return;
+  }
+
+  const leftovers = await db
+    .select({ id: orders.id })
+    .from(orders)
+    .where(eq(orders.guestEmail, delivery.email));
+
+  const ids = leftovers.map((row) => row.id);
+
+  if (ids.length > 0) {
+    const held = await db
+      .select({
+        quantity: inventoryReservations.quantity,
+        variantId: inventoryReservations.variantId,
+      })
+      .from(inventoryReservations)
+      .where(
+        and(
+          inArray(inventoryReservations.orderId, ids),
+          eq(inventoryReservations.status, "active"),
+        ),
+      );
+
+    for (const reservation of held) {
+      await db
+        .update(inventory)
+        .set({
+          available: sql`${inventory.available} + ${reservation.quantity}`,
+          reserved: sql`greatest(${inventory.reserved} - ${reservation.quantity}, 0)`,
+        })
+        .where(eq(inventory.variantId, reservation.variantId));
+    }
+
+    await db.delete(stockMovements).where(inArray(stockMovements.orderId, ids));
+    await db
+      .delete(inventoryReservations)
+      .where(inArray(inventoryReservations.orderId, ids));
+    await db.delete(orderEvents).where(inArray(orderEvents.orderId, ids));
+    await db.delete(paymentAttempts).where(inArray(paymentAttempts.orderId, ids));
+    await db.delete(orderItems).where(inArray(orderItems.orderId, ids));
+    await db.delete(orderAddresses).where(inArray(orderAddresses.orderId, ids));
+    await db.delete(orders).where(inArray(orders.id, ids));
+  }
+
+  await closeTransactionalPool();
 });
 
 describe.skipIf(!hasRealDatabase)("createPendingOrder", () => {
@@ -619,12 +669,5 @@ describe.skipIf(!hasRealDatabase)("reservation lifecycle", () => {
 
     const stock = await readInventory(stocked.variantId);
     expect(stock.available).toBe(2);
-  });
-});
-
-describe.skipIf(!hasRealDatabase)("cleanup", () => {
-  it("closes the transactional pool", async () => {
-    await closeTransactionalPool();
-    expect(true).toBe(true);
   });
 });

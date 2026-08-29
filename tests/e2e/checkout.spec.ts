@@ -1,6 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
+import { E2E_EMAIL_DOMAIN } from "./global-teardown";
+
 const GUEST_CART_KEY = "shopverse:guest-cart";
 const SIMPLE_PRODUCT = "/products/ikea-markus-office-chair";
 
@@ -13,7 +15,7 @@ async function fillDelivery(page: Page, overrides: Record<string, string> = {}) 
   const values: Record<string, string> = {
     address: "12 Adeola Odeku Street",
     city: "Victoria Island",
-    email: "buyer@example.com",
+    email: `buyer@${E2E_EMAIL_DOMAIN}`,
     firstName: "Ada",
     lastName: "Obi",
     phone: "08031234567",
