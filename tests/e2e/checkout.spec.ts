@@ -6,6 +6,14 @@ import { E2E_EMAIL_DOMAIN } from "./global-teardown";
 const GUEST_CART_KEY = "shopverse:guest-cart";
 const SIMPLE_PRODUCT = "/products/ikea-markus-office-chair";
 
+/**
+ * Placing an order is a multi-statement transaction against a remote database. Measured at
+ * ~2s on a warm instance and ~12s on a cold or throttled one, so the default 10s expect
+ * timeout reads infrastructure latency as a functional failure. These assertions are about
+ * correctness, not speed.
+ */
+const ORDER_TIMEOUT_MS = 40_000;
+
 async function addProduct(page: Page) {
   await page.goto(SIMPLE_PRODUCT);
   await page.getByRole("button", { name: /^Add .+ to cart$/ }).click();
@@ -214,9 +222,12 @@ test.describe("checkout", () => {
     await page.waitForTimeout(2100);
     await payButton(page).click();
 
-    await expect(page.getByRole("heading", { name: /^Order SV-/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Order SV-/ })).toBeVisible({
+      timeout: ORDER_TIMEOUT_MS,
+    });
     await expect(page.getByRole("log", { name: "Notifications" })).toContainText(
       /^Order SV-[2-9A-HJ-NP-Z]{8} placed/,
+      { timeout: ORDER_TIMEOUT_MS },
     );
   });
 
@@ -233,13 +244,13 @@ test.describe("checkout", () => {
     await payButton(page).click();
 
     const heading = page.getByRole("heading", { name: /^Order SV-/ });
-    await expect(heading).toBeVisible();
+    await expect(heading).toBeVisible({ timeout: ORDER_TIMEOUT_MS });
 
     const first = await heading.textContent();
 
     await payButton(page).click();
 
-    await expect(heading).toHaveText(first ?? "");
+    await expect(heading).toHaveText(first ?? "", { timeout: ORDER_TIMEOUT_MS });
   });
 
   test("a filled honeypot is rejected", async ({ page }) => {

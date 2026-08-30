@@ -6,16 +6,25 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
 export default defineConfig({
   expect: { timeout: 10_000 },
   forbidOnly: !!process.env.CI,
+  globalSetup: "./tests/e2e/global-setup.ts",
   globalTeardown: "./tests/e2e/global-teardown.ts",
   fullyParallel: false,
   projects: [
     {
       name: "desktop",
-      use: { ...devices["Desktop Chrome"], viewport: { height: 900, width: 1440 } },
+      use: {
+        ...devices["Desktop Chrome"],
+        extraHTTPHeaders: { "x-real-ip": "203.0.113.10" },
+        viewport: { height: 900, width: 1440 },
+      },
     },
     {
       name: "mobile",
-      use: { ...devices["Desktop Chrome"], viewport: { height: 844, width: 390 } },
+      use: {
+        ...devices["Desktop Chrome"],
+        extraHTTPHeaders: { "x-real-ip": "203.0.113.20" },
+        viewport: { height: 844, width: 390 },
+      },
     },
   ],
   reporter: process.env.CI ? "line" : [["list"]],

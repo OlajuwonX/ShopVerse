@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { AUTH_RATE_LIMITS } from "@/constants/auth";
 import { db } from "@/server/db";
@@ -23,60 +23,57 @@ function addMs(date: Date, ms: number) {
   return new Date(date.getTime() + ms);
 }
 
+/**
+ * The counter is advanced by a single statement so Postgres arbitrates concurrency.
+ * A read-then-write here lets N simultaneous requests all observe the same `attempts`
+ * and write the same value, advancing the counter by one instead of N — which is how a
+ * brute-force or checkout flood slips through a limit that looks correct in isolation.
+ */
 export async function checkRateLimit(config: RateLimitConfig, identifier: string) {
   const now = new Date();
+  const windowFloor = addMs(now, -config.windowMs);
+  const blockUntil = addMs(now, config.blockMs);
   const identifierHash = hashToken(identifier.toLowerCase());
 
-  const existing = await db
-    .select()
-    .from(rateLimits)
-    .where(
-      and(
-        eq(rateLimits.action, config.action),
-        eq(rateLimits.identifierHash, identifierHash),
-      ),
-    )
-    .limit(1);
+  const stillBlocked = sql`${rateLimits.blockedUntil} is not null and ${rateLimits.blockedUntil} > ${now}`;
+  const windowExpired = sql`${rateLimits.windowStartedAt} <= ${windowFloor}`;
 
-  const row = existing[0];
+  const rows = await db
+    .insert(rateLimits)
+    .values({
+      action: config.action,
+      attempts: 1,
+      blockedUntil: null,
+      identifierHash,
+      windowStartedAt: now,
+    })
+    .onConflictDoUpdate({
+      set: {
+        attempts: sql`case
+          when ${stillBlocked} then ${rateLimits.attempts}
+          when ${windowExpired} then 1
+          else ${rateLimits.attempts} + 1
+        end`,
+        blockedUntil: sql`case
+          when ${stillBlocked} then ${rateLimits.blockedUntil}
+          when ${windowExpired} then null
+          when ${rateLimits.attempts} + 1 > ${config.maxAttempts} then ${blockUntil}
+          else null
+        end`,
+        updatedAt: now,
+        windowStartedAt: sql`case
+          when ${stillBlocked} then ${rateLimits.windowStartedAt}
+          when ${windowExpired} then ${now}
+          else ${rateLimits.windowStartedAt}
+        end`,
+      },
+      target: [rateLimits.action, rateLimits.identifierHash],
+    })
+    .returning({ blockedUntil: rateLimits.blockedUntil });
 
-  if (row?.blockedUntil && row.blockedUntil > now) {
-    return { allowed: false, retryAfter: row.blockedUntil } satisfies RateLimitResult;
-  }
+  const blockedUntil = rows[0]?.blockedUntil ?? null;
 
-  if (!row || row.windowStartedAt <= addMs(now, -config.windowMs)) {
-    await db
-      .insert(rateLimits)
-      .values({
-        action: config.action,
-        attempts: 1,
-        blockedUntil: null,
-        identifierHash,
-        windowStartedAt: now,
-      })
-      .onConflictDoUpdate({
-        set: {
-          attempts: 1,
-          blockedUntil: null,
-          updatedAt: now,
-          windowStartedAt: now,
-        },
-        target: [rateLimits.action, rateLimits.identifierHash],
-      });
-
-    return { allowed: true } satisfies RateLimitResult;
-  }
-
-  const attempts = row.attempts + 1;
-  const blockedUntil =
-    attempts > config.maxAttempts ? addMs(now, config.blockMs) : null;
-
-  await db
-    .update(rateLimits)
-    .set({ attempts, blockedUntil, updatedAt: now })
-    .where(eq(rateLimits.id, row.id));
-
-  if (blockedUntil) {
+  if (blockedUntil && blockedUntil > now) {
     return { allowed: false, retryAfter: blockedUntil } satisfies RateLimitResult;
   }
 
