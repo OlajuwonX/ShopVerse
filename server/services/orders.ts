@@ -51,9 +51,16 @@ export type CreateOrderResult =
   | { order: OrderSummary; status: "created" }
   | { order: OrderSummary; status: "replayed" }
   | { issues: CreateOrderIssue[]; status: "unavailable" }
+  | { acknowledged: number; current: number; status: "price_changed" }
   | { reason: string; status: "rejected" };
 
 export type CreateOrderInput = {
+  /**
+   * The total the customer saw. Compared against the total computed inside the
+   * transaction; a mismatch aborts before any row is written (CART-01). Never used
+   * as money — the charge is always what the database says.
+   */
+  acknowledgedTotal: number;
   checkoutAttemptId: string;
   delivery: DeliveryDetails;
   lines: readonly CartLineInput[];
@@ -73,6 +80,18 @@ class RejectedError extends Error {
   constructor(reason: string) {
     super(reason);
     this.name = "RejectedError";
+  }
+}
+
+class PriceChangedError extends Error {
+  readonly acknowledged: number;
+  readonly current: number;
+
+  constructor(acknowledged: number, current: number) {
+    super("The total changed since the customer last saw it");
+    this.name = "PriceChangedError";
+    this.acknowledged = acknowledged;
+    this.current = current;
   }
 }
 
@@ -335,6 +354,12 @@ export async function createPendingOrder(
 
       const grandTotal = subtotal + delivery.fee;
 
+      // CART-01: the customer must have seen this exact figure. Checked inside the
+      // transaction, so a price edit between validation and commit cannot slip through.
+      if (grandTotal !== input.acknowledgedTotal) {
+        throw new PriceChangedError(input.acknowledgedTotal, grandTotal);
+      }
+
       await tx.insert(orders).values({
         checkoutAttemptId: input.checkoutAttemptId,
         currency: "NGN",
@@ -416,6 +441,14 @@ export async function createPendingOrder(
   } catch (error) {
     if (error instanceof UnavailableError) {
       return { issues: error.issues, status: "unavailable" };
+    }
+
+    if (error instanceof PriceChangedError) {
+      return {
+        acknowledged: error.acknowledged,
+        current: error.current,
+        status: "price_changed",
+      };
     }
 
     if (error instanceof RejectedError) {

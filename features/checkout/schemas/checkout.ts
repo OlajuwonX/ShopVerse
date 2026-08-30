@@ -7,6 +7,8 @@ import {
 } from "@/constants/checkout";
 import { nigerianStates, SUPPORTED_COUNTRY } from "@/constants/regions";
 import { cartLineInputSchema } from "@/features/cart/schemas/cart";
+
+const POSTGRES_INTEGER_MAX = 2_147_483_647;
 import { CART_MAX_LINES } from "@/constants/cart";
 
 const trimmed = (max: number) => z.string().trim().max(max);
@@ -60,6 +62,17 @@ export const deliveryDetailsSchema = z.object({
 export type DeliveryDetails = z.infer<typeof deliveryDetailsSchema>;
 
 export const checkoutSubmissionSchema = deliveryDetailsSchema.extend({
+  /**
+   * The total the customer was shown when they pressed Pay. This is a *consent
+   * assertion*, never money: the server recomputes the charge from the database and
+   * refuses the order if the two disagree (CART-01). It is deliberately not used in
+   * any arithmetic, which is what keeps CART-07 intact.
+   */
+  acknowledgedTotal: z.coerce
+    .number()
+    .int({ message: "Refresh the page and try again" })
+    .min(0)
+    .max(POSTGRES_INTEGER_MAX),
   checkoutAttemptId: z.uuid({ message: "Restart checkout and try again" }),
   lines: z
     .array(cartLineInputSchema)
@@ -96,11 +109,17 @@ export type PlacedOrder = {
   reference: string;
 };
 
+export type PriceChange = {
+  acknowledged: number;
+  current: number;
+};
+
 export type CheckoutState = {
   fieldErrors: Partial<Record<CheckoutField, string>>;
   formError: string | null;
   order?: PlacedOrder;
-  status: "idle" | "invalid" | "cart_changed" | "ordered";
+  priceChange?: PriceChange;
+  status: "idle" | "invalid" | "cart_changed" | "price_changed" | "ordered";
   validatedAttemptId: string | null;
 };
 

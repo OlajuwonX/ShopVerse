@@ -253,6 +253,56 @@ test.describe("checkout", () => {
     await expect(heading).toHaveText(first ?? "", { timeout: ORDER_TIMEOUT_MS });
   });
 
+  test("refuses an order whose total the customer never saw (CART-01)", async ({
+    page,
+  }) => {
+    await addProduct(page);
+    await page.goto("/checkout");
+
+    await fillDelivery(page);
+    await chooseState(page, "Lagos");
+
+    // Stand in for a price edit between the page rendering and the customer pressing Pay.
+    await page.evaluate(() => {
+      const field = document.querySelector<HTMLInputElement>(
+        'input[name="acknowledgedTotal"]',
+      );
+
+      if (field) {
+        field.value = "1";
+      }
+    });
+
+    await page.waitForTimeout(2100);
+    await payButton(page).click();
+
+    await expect(page.getByRole("heading", { name: "The total changed" })).toBeVisible({
+      timeout: ORDER_TIMEOUT_MS,
+    });
+    await expect(page.getByRole("heading", { name: /^Order SV-/ })).toBeHidden();
+  });
+
+  test("the acknowledged total is sent and matches the summary", async ({ page }) => {
+    await addProduct(page);
+    await page.goto("/checkout");
+
+    await fillDelivery(page);
+    await chooseState(page, "Lagos");
+
+    const sent = await page
+      .locator('input[name="acknowledgedTotal"]')
+      .getAttribute("value");
+
+    const summary = await page
+      .getByRole("heading", { name: "Order summary" })
+      .locator("..")
+      .innerText();
+
+    const naira = Number(sent) / 100;
+
+    expect(summary).toContain(naira.toLocaleString("en-NG"));
+  });
+
   test("a filled honeypot is rejected", async ({ page }) => {
     await addProduct(page);
     await page.goto("/checkout");

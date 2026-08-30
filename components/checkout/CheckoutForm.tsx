@@ -19,6 +19,7 @@ import {
   CHECKOUT_HONEYPOT_FIELD,
   CHECKOUT_RENDERED_AT_FIELD,
 } from "@/constants/checkout";
+import { Money } from "@/components/commerce/Money";
 import { RESERVATION_MINUTES } from "@/constants/orders";
 import { toCartLineInputs } from "@/features/cart/schemas/cart";
 import { useCartValidation } from "@/features/cart/useCartValidation";
@@ -66,9 +67,12 @@ export function CheckoutForm() {
 
   useEffect(() => {
     if (state.formError) {
-      notify({ title: state.formError, tone: "error" });
+      notify({
+        title: state.formError,
+        tone: state.status === "price_changed" ? "info" : "error",
+      });
     }
-  }, [state.formError]);
+  }, [state.formError, state.status]);
 
   useEffect(() => {
     if (state.status === "ordered" && state.order) {
@@ -174,6 +178,11 @@ export function CheckoutForm() {
         value={String(renderedAt)}
       />
       <input name="checkoutAttemptId" type="hidden" value={attemptId} />
+      {/*
+        The total the customer is looking at. The server recomputes the charge and refuses
+        the order if these disagree (CART-01); it is consent, never money.
+      */}
+      <input name="acknowledgedTotal" type="hidden" value={String(totals.total)} />
       <input
         name="lines"
         type="hidden"
@@ -190,6 +199,23 @@ export function CheckoutForm() {
           >
             {state.formError}
           </p>
+        ) : null}
+
+        {state.status === "price_changed" && state.priceChange ? (
+          <section
+            aria-labelledby="price-changed"
+            className="grid gap-2 rounded-lg border border-warning bg-warning-soft p-4"
+          >
+            <h2 className="text-heading-3 font-bold text-warning" id="price-changed">
+              The total changed
+            </h2>
+            <p className="text-body-sm text-text">
+              You were shown <Money minorUnits={state.priceChange.acknowledged} /> but
+              the current total is <Money minorUnits={state.priceChange.current} />.
+              Nothing has been ordered and nothing has been charged. Press Pay again to
+              confirm the new total.
+            </p>
+          </section>
         ) : null}
 
         {state.status === "ordered" && state.order ? (

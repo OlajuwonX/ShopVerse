@@ -94,6 +94,7 @@ async function runCheckout(formData: FormData): Promise<CheckoutState> {
   }
 
   const parsed = checkoutSubmissionSchema.safeParse({
+    acknowledgedTotal: formData.get("acknowledgedTotal"),
     address: formData.get("address"),
     checkoutAttemptId: formData.get("checkoutAttemptId"),
     city: formData.get("city"),
@@ -173,10 +174,33 @@ async function runCheckout(formData: FormData): Promise<CheckoutState> {
   }
 
   const created = await createPendingOrder({
+    acknowledgedTotal: parsed.data.acknowledgedTotal,
     checkoutAttemptId: parsed.data.checkoutAttemptId,
     delivery: parsed.data,
     lines: parsed.data.lines,
   });
+
+  if (created.status === "price_changed") {
+    await writeAuditLog({
+      action: "checkout.price_changed",
+      actorType: "system",
+      after: {
+        acknowledged: created.acknowledged,
+        attemptId: parsed.data.checkoutAttemptId,
+        current: created.current,
+      },
+      targetType: "checkout",
+    });
+
+    return {
+      fieldErrors: {},
+      formError:
+        "The total changed while you were checking out. Nothing has been ordered — review the new total and confirm.",
+      priceChange: { acknowledged: created.acknowledged, current: created.current },
+      status: "price_changed",
+      validatedAttemptId: null,
+    };
+  }
 
   if (created.status === "unavailable") {
     await writeAuditLog({
