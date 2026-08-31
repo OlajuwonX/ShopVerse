@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { CART_BURST_LIMIT } from "@/constants/cart";
+import { CART_BURST_LIMIT, CART_SUSTAINED_LIMIT } from "@/constants/cart";
 import { cartValidationRequestSchema } from "@/features/cart/schemas/cart";
 import { EMPTY_CART_VALIDATION, validateCart } from "@/server/services/cart";
+import { checkRateLimit } from "@/server/auth/rate-limit";
 import { checkMemoryRateLimit } from "@/server/security/memory-rate-limit";
 import { getRequestContext } from "@/server/security/request-context";
 
@@ -15,6 +16,20 @@ export async function POST(request: Request) {
       headers: {
         "cache-control": "no-store",
         "retry-after": String(Math.max(1, burst.retryAfterSeconds)),
+      },
+      status: 429,
+    });
+  }
+
+  const sustained = await checkRateLimit(CART_SUSTAINED_LIMIT, context.ip ?? "unknown");
+
+  if (!sustained.allowed) {
+    return NextResponse.json(EMPTY_CART_VALIDATION, {
+      headers: {
+        "cache-control": "no-store",
+        "retry-after": String(
+          Math.max(1, Math.ceil((sustained.retryAfter.getTime() - Date.now()) / 1000)),
+        ),
       },
       status: 429,
     });

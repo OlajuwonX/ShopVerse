@@ -117,7 +117,16 @@ function errorCode(error: unknown): string | null {
   return null;
 }
 
-async function findByAttempt(attemptId: string): Promise<OrderSummary | null> {
+/**
+ * The attempt id is client-generated and lives in `sessionStorage`, so on its own it is a
+ * bearer token for an order — and the replay response carries the payment reference, which
+ * from Stage 28 authorises a real transaction. Matching the guest email as well means a
+ * leaked attempt id is not sufficient to read someone else's order (audit M-2).
+ */
+async function findByAttempt(
+  attemptId: string,
+  guestEmail: string,
+): Promise<OrderSummary | null> {
   const rows = await db
     .select({
       currency: orders.currency,
@@ -131,7 +140,9 @@ async function findByAttempt(attemptId: string): Promise<OrderSummary | null> {
     })
     .from(orders)
     .innerJoin(paymentAttempts, eq(paymentAttempts.orderId, orders.id))
-    .where(eq(orders.checkoutAttemptId, attemptId))
+    .where(
+      and(eq(orders.checkoutAttemptId, attemptId), eq(orders.guestEmail, guestEmail)),
+    )
     .limit(1);
 
   return rows[0] ?? null;
@@ -324,7 +335,7 @@ export async function createPendingOrder(
     return { reason: "That is more of one item than we can sell.", status: "rejected" };
   }
 
-  const existing = await findByAttempt(input.checkoutAttemptId);
+  const existing = await findByAttempt(input.checkoutAttemptId, input.delivery.email);
 
   if (existing) {
     return { order: existing, status: "replayed" };
@@ -458,11 +469,21 @@ export async function createPendingOrder(
     const code = errorCode(error);
 
     if (code === UNIQUE_VIOLATION) {
-      const replayed = await findByAttempt(input.checkoutAttemptId);
+      const replayed = await findByAttempt(
+        input.checkoutAttemptId,
+        input.delivery.email,
+      );
 
       if (replayed) {
         return { order: replayed, status: "replayed" };
       }
+
+      // The attempt id is taken but the email does not match it. Say nothing about the
+      // order that already exists.
+      return {
+        reason: "Restart checkout and try again.",
+        status: "rejected",
+      };
     }
 
     if (code === CHECK_VIOLATION) {

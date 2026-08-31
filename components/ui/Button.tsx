@@ -20,7 +20,7 @@ const variants: Record<ButtonVariant, string> = {
   ghost:
     "border-transparent bg-transparent text-text hover:bg-surface-muted active:bg-surface-muted focus-visible:outline-brand disabled:text-text-muted",
   danger:
-    "border-danger bg-danger text-white hover:bg-red-800 active:bg-red-900 focus-visible:outline-danger disabled:border-border-strong disabled:bg-surface-muted disabled:text-text-muted",
+    "border-danger bg-danger text-white hover:bg-danger-strong active:bg-danger-stronger focus-visible:outline-danger disabled:border-border-strong disabled:bg-surface-muted disabled:text-text-muted",
 };
 
 const sizes: Record<ButtonSize, string> = {

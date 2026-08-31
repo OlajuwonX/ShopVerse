@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 
-import { Money } from "@/components/commerce/Money";
+import { formatMoney, Money } from "@/components/commerce/Money";
 import { toMajorUnits, toMinorUnits } from "@/lib/money";
 
 const DEBOUNCE_MS = 300;
@@ -73,7 +73,7 @@ export function PriceRange({ ceiling, maxPrice, onCommit }: PriceRangeProps) {
           aria-valuetext={
             isAtCeiling
               ? "Any price"
-              : `Up to ₦${draft.toLocaleString("en-NG")} maximum`
+              : `Up to ${formatMoney(toMinorUnits(draft))} maximum`
           }
           className="h-2 w-full cursor-pointer appearance-none rounded-full bg-surface-muted accent-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           max={ceilingMajor}

@@ -185,7 +185,7 @@ afterAll(async () => {
   const leftovers = await db
     .select({ id: orders.id })
     .from(orders)
-    .where(eq(orders.guestEmail, delivery.email));
+    .where(inArray(orders.guestEmail, [delivery.email, "attacker@shopverse.test"]));
 
   const ids = leftovers.map((row) => row.id);
 
@@ -592,6 +592,87 @@ describe.skipIf(!hasRealDatabase)("createPendingOrder", () => {
 
     for (const reference of references) {
       expect(isOrderReference(reference)).toBe(true);
+    }
+  });
+});
+
+describe.skipIf(!hasRealDatabase)("attempt replay binding (M-2)", () => {
+  it("does not hand someone else's order to a caller who only knows the attempt id", async () => {
+    await setAvailable(stocked.variantId, 5);
+
+    const attemptId = attempt();
+    const lines = [
+      { productId: stocked.productId, quantity: 1, variantId: stocked.variantId },
+    ];
+    const oneUnit = totalFor([{ quantity: 1, unitPrice: stocked.unitPrice }]);
+
+    const mine = await createPendingOrder({
+      acknowledgedTotal: oneUnit,
+      checkoutAttemptId: attemptId,
+      delivery,
+      lines,
+    });
+
+    if (mine.status !== "created") {
+      throw new Error(`expected created, got ${mine.status}`);
+    }
+
+    await trackOrder(mine.order.id);
+
+    // Same attempt id, different customer.
+    const theirs = await createPendingOrder({
+      acknowledgedTotal: oneUnit,
+      checkoutAttemptId: attemptId,
+      delivery: { ...delivery, email: "attacker@shopverse.test" },
+      lines,
+    });
+
+    expect(theirs.status, "must not replay another customer's order").toBe("rejected");
+
+    if (theirs.status === "rejected") {
+      expect(theirs.reason, "and must not describe what exists").not.toMatch(
+        /SV-|order|payment|total/i,
+      );
+    }
+
+    const stock = await readInventory(stocked.variantId);
+
+    expect(stock.available, "and must not reserve a second time").toBe(4);
+  });
+
+  it("still replays for the customer who owns the attempt", async () => {
+    await setAvailable(stocked.variantId, 5);
+
+    const attemptId = attempt();
+    const lines = [
+      { productId: stocked.productId, quantity: 1, variantId: stocked.variantId },
+    ];
+    const oneUnit = totalFor([{ quantity: 1, unitPrice: stocked.unitPrice }]);
+
+    const first = await createPendingOrder({
+      acknowledgedTotal: oneUnit,
+      checkoutAttemptId: attemptId,
+      delivery,
+      lines,
+    });
+
+    const again = await createPendingOrder({
+      acknowledgedTotal: oneUnit,
+      checkoutAttemptId: attemptId,
+      delivery,
+      lines,
+    });
+
+    if (first.status !== "created") {
+      throw new Error(`expected created, got ${first.status}`);
+    }
+
+    await trackOrder(first.order.id);
+
+    expect(again.status).toBe("replayed");
+
+    if (again.status === "replayed") {
+      expect(again.order.id).toBe(first.order.id);
     }
   });
 });

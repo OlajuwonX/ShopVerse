@@ -24,6 +24,8 @@
   --color-warning: #b45309;
   --color-warning-soft: #fef3c7;
   --color-danger: #b91c1c;
+  --color-danger-strong: #991b1b;
+  --color-danger-stronger: #7f1d1d;
   --color-danger-soft: #fee2e2;
   --color-price: #0f766e;
   --color-sale: #be123c;
@@ -98,6 +100,8 @@
   --color-warning: #fbbf24;
   --color-warning-soft: #78350f;
   --color-danger: #f87171;
+  --color-danger-strong: #ef4444;
+  --color-danger-stronger: #dc2626;
   --color-danger-soft: #4c0d13;
   --color-price: #5eead4;
   --color-sale: #fb7185;

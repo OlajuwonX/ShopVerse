@@ -28,7 +28,7 @@ export function SectionRenderer({
       <SectionShell title={section.title}>
         <ErrorState
           description="This section could not be loaded. The rest of the page is unaffected."
-          title="Section unavailable"
+          title="Could not load this section"
         />
       </SectionShell>
     );
