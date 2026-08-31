@@ -19,6 +19,7 @@ import {
 } from "@/constants/search";
 import { useRecentSearches } from "@/features/search/useRecentSearches";
 import { useSearchSuggestions } from "@/features/search/useSearchSuggestions";
+import { FIELD_FOCUS, FIELD_TEXT } from "@/components/ui/field-styles";
 import { cn } from "@/lib/cn";
 import { categoryHref, productHref } from "@/lib/routes";
 
@@ -181,7 +182,11 @@ export function SearchInput({
           aria-controls={hasPanel ? listboxId : undefined}
           aria-expanded={hasPanel}
           autoComplete="off"
-          className="min-h-11 w-full rounded-full border border-border bg-surface py-2 pr-16 pl-9 text-body-sm pointer-coarse:text-body text-text transition-colors placeholder:text-text-subtle focus-visible:border-text focus-visible:outline-1.5  focus-visible:outline-text"
+          className={cn(
+            "min-h-11 w-full rounded-full border border-border bg-surface py-2 pr-16 pl-9 text-text transition-colors placeholder:text-text-subtle",
+            FIELD_TEXT,
+            FIELD_FOCUS,
+          )}
           enterKeyHint="search"
           id={id}
           maxLength={SEARCH_MAX_LENGTH}

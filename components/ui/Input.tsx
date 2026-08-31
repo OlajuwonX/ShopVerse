@@ -1,5 +1,10 @@
 import type { InputHTMLAttributes } from "react";
 
+import {
+  FIELD_FOCUS,
+  FIELD_FOCUS_INVALID,
+  FIELD_TEXT,
+} from "@/components/ui/field-styles";
 import { cn } from "@/lib/cn";
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
@@ -32,10 +37,11 @@ export function Input({
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
         className={cn(
-          "min-h-11 rounded-md border border-border bg-surface-raised px-3 text-body-sm pointer-coarse:text-body text-text shadow-sm transition-colors placeholder:text-text-subtle focus-visible:border-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-muted",
-          error
-            ? "border-danger focus-visible:border-danger focus-visible:outline-danger"
-            : null,
+          "min-h-11 rounded-md border border-border bg-surface-raised px-3 text-text shadow-sm transition-colors placeholder:text-text-subtle disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-muted",
+          FIELD_TEXT,
+          FIELD_FOCUS,
+          error && "border-danger",
+          error && FIELD_FOCUS_INVALID,
           className,
         )}
         id={inputId}
