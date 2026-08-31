@@ -19,6 +19,8 @@ const serverEnvSchema = z.object({
 
   CLOUDINARY_API_KEY: z.string().min(1).optional(),
   CLOUDINARY_API_SECRET: z.string().min(1).optional(),
+
+  CRON_SECRET: z.string().min(32).optional(),
 });
 
 const clientEnvSchema = z.object({

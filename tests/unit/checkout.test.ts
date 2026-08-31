@@ -34,6 +34,7 @@ function details(overrides: Record<string, unknown> = {}) {
 function submission(overrides: Record<string, unknown> = {}) {
   return {
     ...details(),
+    acknowledgedTotal: 1_250_00,
     checkoutAttemptId: "22222222-2222-4222-8222-222222222222",
     lines: [{ productId: PRODUCT, quantity: 1, variantId: VARIANT }],
     [CHECKOUT_HONEYPOT_FIELD]: "",
@@ -163,19 +164,54 @@ describe("checkoutSubmissionSchema", () => {
     expect(parsed.success).toBe(false);
   });
 
-  it("carries no money field at all", () => {
+  it("carries no money on the lines — only intent (CART-07)", () => {
     const parsed = checkoutSubmissionSchema.safeParse(
       submission({ lines: [{ productId: PRODUCT, quantity: 1, variantId: VARIANT }] }),
     );
 
-    const serialised = JSON.stringify(parsed.data);
-
-    expect(serialised).not.toMatch(/price|total|amount|fee/i);
     expect(Object.keys(parsed.data!.lines[0]!).sort()).toStrictEqual([
       "productId",
       "quantity",
       "variantId",
     ]);
+
+    expect(JSON.stringify(parsed.data!.lines)).not.toMatch(/price|total|amount|fee/i);
+  });
+
+  it("carries exactly one total, and it is consent rather than money (CART-01)", () => {
+    const parsed = checkoutSubmissionSchema.safeParse(submission());
+
+    const moneyish = Object.keys(parsed.data!).filter((key) =>
+      /price|total|amount|fee/i.test(key),
+    );
+
+    expect(
+      moneyish,
+      "acknowledgedTotal is the only money-shaped field the client may send",
+    ).toStrictEqual(["acknowledgedTotal"]);
+
+    // It is never used as an amount: the server recomputes the charge and refuses the
+    // order when the two disagree. Proven in tests/integration/orders.test.ts —
+    // "cannot be talked into charging less than the catalogue says".
+    expect(parsed.data!.acknowledgedTotal).toBe(1_250_00);
+  });
+
+  it("rejects a fractional or negative acknowledged total", () => {
+    for (const value of [-1, 12.5, Number.NaN]) {
+      expect(
+        checkoutSubmissionSchema.safeParse(submission({ acknowledgedTotal: value }))
+          .success,
+        String(value),
+      ).toBe(false);
+    }
+  });
+
+  it("requires the acknowledged total to be present", () => {
+    const withoutTotal: Record<string, unknown> = submission();
+
+    delete withoutTotal.acknowledgedTotal;
+
+    expect(checkoutSubmissionSchema.safeParse(withoutTotal).success).toBe(false);
   });
 
   it("requires a uuid checkout attempt id", () => {

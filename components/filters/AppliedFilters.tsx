@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 
 import { MAX_RATING } from "@/features/filters/catalogue-url";
 import { useCatalogueFilters } from "@/features/filters/useCatalogueFilters";
-import { toMajorUnits } from "@/lib/money";
+import { formatMoney } from "@/components/commerce/Money";
 
 type Chip = {
   key: string;
@@ -29,19 +29,19 @@ export function AppliedFilters({ brandNames }: { brandNames: Record<string, stri
   }
 
   if (filters.minPrice !== null || filters.maxPrice !== null) {
-    const from = filters.minPrice === null ? null : toMajorUnits(filters.minPrice);
-    const to = filters.maxPrice === null ? null : toMajorUnits(filters.maxPrice);
+    const from = filters.minPrice;
+    const to = filters.maxPrice;
 
     function priceLabel() {
       if (from === null) {
-        return `Up to ₦${(to ?? 0).toLocaleString("en-NG")}`;
+        return `Up to ${formatMoney(to ?? 0)}`;
       }
 
       if (to === null) {
-        return `From ₦${from.toLocaleString("en-NG")}`;
+        return `From ${formatMoney(from)}`;
       }
 
-      return `₦${from.toLocaleString("en-NG")} – ₦${to.toLocaleString("en-NG")}`;
+      return `${formatMoney(from)} – ${formatMoney(to)}`;
     }
 
     chips.push({

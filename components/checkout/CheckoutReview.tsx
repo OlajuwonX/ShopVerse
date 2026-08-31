@@ -21,7 +21,7 @@ export function CheckoutReview({ lines }: { lines: readonly CartLineView[] }) {
           Review items
         </h2>
         <Link
-          className="rounded-md text-body-sm font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="-my-1 inline-flex min-h-11 items-center rounded-md px-1 text-body-sm font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           href={cartHref()}
         >
           Edit cart

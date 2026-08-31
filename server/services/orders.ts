@@ -51,9 +51,16 @@ export type CreateOrderResult =
   | { order: OrderSummary; status: "created" }
   | { order: OrderSummary; status: "replayed" }
   | { issues: CreateOrderIssue[]; status: "unavailable" }
+  | { acknowledged: number; current: number; status: "price_changed" }
   | { reason: string; status: "rejected" };
 
 export type CreateOrderInput = {
+  /**
+   * The total the customer saw. Compared against the total computed inside the
+   * transaction; a mismatch aborts before any row is written (CART-01). Never used
+   * as money — the charge is always what the database says.
+   */
+  acknowledgedTotal: number;
   checkoutAttemptId: string;
   delivery: DeliveryDetails;
   lines: readonly CartLineInput[];
@@ -73,6 +80,18 @@ class RejectedError extends Error {
   constructor(reason: string) {
     super(reason);
     this.name = "RejectedError";
+  }
+}
+
+class PriceChangedError extends Error {
+  readonly acknowledged: number;
+  readonly current: number;
+
+  constructor(acknowledged: number, current: number) {
+    super("The total changed since the customer last saw it");
+    this.name = "PriceChangedError";
+    this.acknowledged = acknowledged;
+    this.current = current;
   }
 }
 
@@ -98,7 +117,16 @@ function errorCode(error: unknown): string | null {
   return null;
 }
 
-async function findByAttempt(attemptId: string): Promise<OrderSummary | null> {
+/**
+ * The attempt id is client-generated and lives in `sessionStorage`, so on its own it is a
+ * bearer token for an order — and the replay response carries the payment reference, which
+ * from Stage 28 authorises a real transaction. Matching the guest email as well means a
+ * leaked attempt id is not sufficient to read someone else's order (audit M-2).
+ */
+async function findByAttempt(
+  attemptId: string,
+  guestEmail: string,
+): Promise<OrderSummary | null> {
   const rows = await db
     .select({
       currency: orders.currency,
@@ -112,7 +140,9 @@ async function findByAttempt(attemptId: string): Promise<OrderSummary | null> {
     })
     .from(orders)
     .innerJoin(paymentAttempts, eq(paymentAttempts.orderId, orders.id))
-    .where(eq(orders.checkoutAttemptId, attemptId))
+    .where(
+      and(eq(orders.checkoutAttemptId, attemptId), eq(orders.guestEmail, guestEmail)),
+    )
     .limit(1);
 
   return rows[0] ?? null;
@@ -305,7 +335,7 @@ export async function createPendingOrder(
     return { reason: "That is more of one item than we can sell.", status: "rejected" };
   }
 
-  const existing = await findByAttempt(input.checkoutAttemptId);
+  const existing = await findByAttempt(input.checkoutAttemptId, input.delivery.email);
 
   if (existing) {
     return { order: existing, status: "replayed" };
@@ -334,6 +364,12 @@ export async function createPendingOrder(
       );
 
       const grandTotal = subtotal + delivery.fee;
+
+      // CART-01: the customer must have seen this exact figure. Checked inside the
+      // transaction, so a price edit between validation and commit cannot slip through.
+      if (grandTotal !== input.acknowledgedTotal) {
+        throw new PriceChangedError(input.acknowledgedTotal, grandTotal);
+      }
 
       await tx.insert(orders).values({
         checkoutAttemptId: input.checkoutAttemptId,
@@ -418,6 +454,14 @@ export async function createPendingOrder(
       return { issues: error.issues, status: "unavailable" };
     }
 
+    if (error instanceof PriceChangedError) {
+      return {
+        acknowledged: error.acknowledged,
+        current: error.current,
+        status: "price_changed",
+      };
+    }
+
     if (error instanceof RejectedError) {
       return { reason: error.message, status: "rejected" };
     }
@@ -425,11 +469,21 @@ export async function createPendingOrder(
     const code = errorCode(error);
 
     if (code === UNIQUE_VIOLATION) {
-      const replayed = await findByAttempt(input.checkoutAttemptId);
+      const replayed = await findByAttempt(
+        input.checkoutAttemptId,
+        input.delivery.email,
+      );
 
       if (replayed) {
         return { order: replayed, status: "replayed" };
       }
+
+      // The attempt id is taken but the email does not match it. Say nothing about the
+      // order that already exists.
+      return {
+        reason: "Restart checkout and try again.",
+        status: "rejected",
+      };
     }
 
     if (code === CHECK_VIOLATION) {

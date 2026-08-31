@@ -32,7 +32,7 @@ export default async function HomePage() {
       {sections.length === 0 ? (
         <EmptyState
           description="No storefront sections are active yet. Sections are created and scheduled from the backoffice."
-          title="Nothing to show yet"
+          title="No sections yet"
         />
       ) : (
         sections.map((section, index) => (

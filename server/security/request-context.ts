@@ -3,6 +3,8 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 
+import { resolveClientIp } from "@/server/security/client-ip";
+
 export type RequestContext = {
   ip: string | null;
   requestId: string;
@@ -10,17 +12,11 @@ export type RequestContext = {
 };
 
 function readClientIp(headerList: Headers) {
-  const forwardedFor = headerList.get("x-forwarded-for");
-
-  if (forwardedFor) {
-    const first = forwardedFor.split(",")[0]?.trim();
-
-    if (first) {
-      return first;
-    }
-  }
-
-  return headerList.get("x-real-ip");
+  return resolveClientIp({
+    forwardedFor: headerList.get("x-forwarded-for"),
+    realIp: headerList.get("x-real-ip"),
+    vercelForwardedFor: headerList.get("x-vercel-forwarded-for"),
+  });
 }
 
 export async function getRequestContext(): Promise<RequestContext> {
