@@ -23,7 +23,7 @@ export function SortSelect() {
         Sort
       </label>
       <select
-        className="min-h-11 rounded-md border border-border bg-surface-raised px-3 text-body-sm text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        className="min-h-11 rounded-md border border-border bg-surface-raised px-3 text-body-sm pointer-coarse:text-body text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         id={id}
         onChange={(event) => {
           update({ sort: event.target.value as (typeof catalogueSortOptions)[number] });

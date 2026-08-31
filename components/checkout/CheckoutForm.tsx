@@ -10,6 +10,7 @@ import {
   emptyDeliveryValues,
   type DeliveryValues,
 } from "@/components/checkout/DeliveryFields";
+import { Money } from "@/components/commerce/Money";
 import { notify } from "@/components/feedback/toast";
 import { Button, buttonStyles } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -19,7 +20,6 @@ import {
   CHECKOUT_HONEYPOT_FIELD,
   CHECKOUT_RENDERED_AT_FIELD,
 } from "@/constants/checkout";
-import { Money } from "@/components/commerce/Money";
 import { RESERVATION_MINUTES } from "@/constants/orders";
 import { toCartLineInputs } from "@/features/cart/schemas/cart";
 import { useCartValidation } from "@/features/cart/useCartValidation";

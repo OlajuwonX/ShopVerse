@@ -33,7 +33,7 @@ export function Select({
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
         className={cn(
-          "min-h-11 rounded-md border border-border bg-surface-raised px-3 text-body-sm text-text shadow-sm transition-colors focus-visible:border-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-muted",
+          "min-h-11 rounded-md border border-border bg-surface-raised px-3 text-body-sm pointer-coarse:text-body text-text shadow-sm transition-colors focus-visible:border-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-muted",
           error
             ? "border-danger focus-visible:border-danger focus-visible:outline-danger"
             : null,
