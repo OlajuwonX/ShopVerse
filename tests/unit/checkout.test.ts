@@ -207,7 +207,9 @@ describe("checkoutSubmissionSchema", () => {
   });
 
   it("requires the acknowledged total to be present", () => {
-    const { acknowledgedTotal: _omitted, ...withoutTotal } = submission();
+    const withoutTotal: Record<string, unknown> = submission();
+
+    delete withoutTotal.acknowledgedTotal;
 
     expect(checkoutSubmissionSchema.safeParse(withoutTotal).success).toBe(false);
   });
