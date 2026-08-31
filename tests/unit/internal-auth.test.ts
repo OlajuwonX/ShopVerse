@@ -45,10 +45,15 @@ describe("authoriseInternalRequest", () => {
   });
 
   it("reports not_configured when no secret is set, so the route can 404", () => {
-    expect(authoriseInternalRequest(`Bearer ${SECRET}`, undefined)).toBe(
-      "not_configured",
-    );
-    expect(authoriseInternalRequest(null, undefined)).toBe("not_configured");
+    for (const configured of [undefined, ""]) {
+      expect(
+        authoriseInternalRequest(`Bearer ${SECRET}`, configured),
+        String(configured),
+      ).toBe("not_configured");
+      expect(authoriseInternalRequest(null, configured), String(configured)).toBe(
+        "not_configured",
+      );
+    }
   });
 
   it("compares hashes, so differing lengths cannot throw", () => {

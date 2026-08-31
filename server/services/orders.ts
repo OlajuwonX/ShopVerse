@@ -95,15 +95,19 @@ class PriceChangedError extends Error {
   }
 }
 
-function errorCode(error: unknown): string | null {
+/**
+ * Drizzle wraps driver errors, so the `code` and `constraint` a Postgres error carries
+ * are one or more `cause` hops down rather than on the object that was thrown.
+ */
+function errorField(error: unknown, field: "code" | "constraint"): string | null {
   let current: unknown = error;
 
   for (let depth = 0; depth < 5 && current; depth += 1) {
     if (typeof current === "object" && current !== null) {
-      const code = (current as { code?: unknown }).code;
+      const value = (current as Record<string, unknown>)[field];
 
-      if (typeof code === "string") {
-        return code;
+      if (typeof value === "string") {
+        return value;
       }
 
       current = (current as { cause?: unknown }).cause;
@@ -116,6 +120,17 @@ function errorCode(error: unknown): string | null {
 
   return null;
 }
+
+/**
+ * The only unique violations that mean "this checkout attempt already produced an
+ * order". Every other unique index in this transaction — the order reference, the
+ * payment reference, one reservation per order and variant — is a different failure
+ * and must not be reported to the customer as a successful replay.
+ */
+const IDEMPOTENCY_CONSTRAINTS = new Set([
+  "orders_checkout_attempt_unique",
+  "payment_attempts_checkout_attempt_unique",
+]);
 
 /**
  * The attempt id is client-generated and lives in `sessionStorage`, so on its own it is a
@@ -466,9 +481,19 @@ export async function createPendingOrder(
       return { reason: error.message, status: "rejected" };
     }
 
-    const code = errorCode(error);
+    const code = errorField(error, "code");
 
     if (code === UNIQUE_VIOLATION) {
+      const constraint = errorField(error, "constraint");
+
+      // A unique violation on anything other than the attempt id is not a replay. It is
+      // a bug or a crafted payload, and the transaction has already rolled back — so
+      // report it as a failure and let it reach the logs, rather than dressing it up as
+      // someone else's successful order.
+      if (constraint !== null && !IDEMPOTENCY_CONSTRAINTS.has(constraint)) {
+        throw error;
+      }
+
       const replayed = await findByAttempt(
         input.checkoutAttemptId,
         input.delivery.email,

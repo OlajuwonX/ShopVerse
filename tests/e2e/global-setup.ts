@@ -1,7 +1,6 @@
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
-
 import { neon } from "@neondatabase/serverless";
+
+import { databaseUrl } from "./env";
 
 /**
  * Actions the suite exercises repeatedly. Clearing them before a run stops counters
@@ -17,26 +16,13 @@ const TEST_RATE_LIMIT_ACTIONS = [
   "catalogue_page",
   "wishlist_hydration_burst",
   "cart_validation_burst",
+  // Database-backed, so unlike the in-memory `*_burst` counters this one survives both a
+  // server restart and the gap between runs. Omitting it is what made the two mobile cart
+  // specs fail late in a full run and pass in isolation: once the 400-request window is
+  // spent, /api/cart/validate answers 429 with an empty validation, so the cart page shows
+  // no price-change banner and no hydrated line.
+  "cart_validation",
 ];
-
-function databaseUrl() {
-  const fromEnv = process.env.DATABASE_URL;
-
-  if (fromEnv && !fromEnv.includes("placeholder")) {
-    return fromEnv;
-  }
-
-  const file = resolve(process.cwd(), ".env");
-
-  if (!existsSync(file)) {
-    return null;
-  }
-
-  const match = /^DATABASE_URL=(.*)$/m.exec(readFileSync(file, "utf8"));
-  const value = match?.[1]?.trim().replace(/^["']|["']$/g, "");
-
-  return value && !value.includes("placeholder") ? value : null;
-}
 
 export default async function globalSetup() {
   const url = databaseUrl();

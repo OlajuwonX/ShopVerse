@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { writeAuditLog } from "@/server/security/audit";
-import { authoriseInternalRequest } from "@/server/security/internal-auth";
+import {
+  authoriseInternalRequest,
+  readInternalSecret,
+} from "@/server/security/internal-auth";
 import { getRequestContext } from "@/server/security/request-context";
 import { expireStaleReservations } from "@/server/services/inventory";
 
@@ -10,7 +13,10 @@ export const dynamic = "force-dynamic";
 const NO_STORE = { "cache-control": "no-store" } as const;
 
 async function sweep(request: Request) {
-  const outcome = authoriseInternalRequest(request.headers.get("authorization"));
+  const outcome = authoriseInternalRequest(
+    request.headers.get("authorization"),
+    readInternalSecret(),
+  );
 
   if (outcome !== "authorised") {
     return NextResponse.json(

@@ -7,7 +7,11 @@ import {
   CHECKOUT_RENDERED_AT_FIELD,
   CHECKOUT_SUSTAINED_LIMIT,
 } from "@/constants/checkout";
-import { cartLineInputSchema } from "@/features/cart/schemas/cart";
+import {
+  cartLineInputSchema,
+  cartLineKey,
+  type CartLineInput,
+} from "@/features/cart/schemas/cart";
 import {
   checkoutSubmissionSchema,
   toFieldErrors,
@@ -29,6 +33,9 @@ const CART_CHANGED =
   "Something in your cart changed. Review the updated cart and try again.";
 
 const TOO_MANY = "Too many checkout attempts. Wait a few minutes before trying again.";
+
+const CART_UNREADABLE =
+  "We could not read your cart. Refresh the page and try again — nothing has been ordered.";
 
 function describeIssues(issues: readonly CreateOrderIssue[]) {
   const first = issues[0];
@@ -59,24 +66,56 @@ function invalid(
   return { fieldErrors, formError, status: "invalid", validatedAttemptId: null };
 }
 
-function parseLines(raw: FormDataEntryValue | null) {
+/**
+ * Returns `null` when the payload is unreadable, when any single line is malformed, or
+ * when the same product and variant appears twice.
+ *
+ * This used to drop bad lines and carry on, which would place an order for fewer items
+ * than the customer is looking at. The `acknowledgedTotal` gate catches that today,
+ * because the totals no longer agree — but a short order must not depend on a second
+ * gate noticing. A duplicate pair is rejected for the same reason: the client dedupes
+ * by `productId:variantId`, so a repeat did not come from our own cart, and reserving it
+ * would collide with `inventory_reservations_order_variant_unique` deep inside the order
+ * transaction where the failure reads as something else entirely.
+ */
+function parseLines(raw: FormDataEntryValue | null): CartLineInput[] | null {
   if (typeof raw !== "string") {
-    return [];
+    return null;
   }
+
+  let parsed: unknown;
 
   try {
-    const parsed: unknown = JSON.parse(raw);
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
 
-    if (!Array.isArray(parsed)) {
-      return [];
+  if (!Array.isArray(parsed)) {
+    return null;
+  }
+
+  const lines: CartLineInput[] = [];
+  const seen = new Set<string>();
+
+  for (const entry of parsed) {
+    const result = cartLineInputSchema.safeParse(entry);
+
+    if (!result.success) {
+      return null;
     }
 
-    return parsed
-      .map((entry) => cartLineInputSchema.safeParse(entry))
-      .flatMap((result) => (result.success ? [result.data] : []));
-  } catch {
-    return [];
+    const key = cartLineKey(result.data);
+
+    if (seen.has(key)) {
+      return null;
+    }
+
+    seen.add(key);
+    lines.push(result.data);
   }
+
+  return lines;
 }
 
 async function runCheckout(formData: FormData): Promise<CheckoutState> {
@@ -93,6 +132,12 @@ async function runCheckout(formData: FormData): Promise<CheckoutState> {
     return invalid({}, TOO_MANY);
   }
 
+  const lines = parseLines(formData.get("lines"));
+
+  if (lines === null) {
+    return invalid({}, CART_UNREADABLE);
+  }
+
   const parsed = checkoutSubmissionSchema.safeParse({
     acknowledgedTotal: formData.get("acknowledgedTotal"),
     address: formData.get("address"),
@@ -104,7 +149,7 @@ async function runCheckout(formData: FormData): Promise<CheckoutState> {
     instructions: formData.get("instructions") ?? "",
     landmark: formData.get("landmark") ?? "",
     lastName: formData.get("lastName"),
-    lines: parseLines(formData.get("lines")),
+    lines,
     phone: formData.get("phone"),
     postalCode: formData.get("postalCode") ?? "",
     state: formData.get("state"),

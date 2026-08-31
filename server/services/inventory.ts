@@ -29,7 +29,10 @@ async function releaseReservation(
 ) {
   const claimed = await tx
     .update(inventoryReservations)
-    .set({ status: reason === "reservation_expired" ? "expired" : "released" })
+    .set({
+      status: reason === "reservation_expired" ? "expired" : "released",
+      updatedAt: new Date(),
+    })
     .where(
       and(
         eq(inventoryReservations.id, reservation.id),

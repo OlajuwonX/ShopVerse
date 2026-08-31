@@ -1,28 +1,8 @@
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
-
 import { neon } from "@neondatabase/serverless";
 
+import { databaseUrl } from "./env";
+
 export const E2E_EMAIL_DOMAIN = "e2e.shopverse.test";
-
-function databaseUrl() {
-  const fromEnv = process.env.DATABASE_URL;
-
-  if (fromEnv && !fromEnv.includes("placeholder")) {
-    return fromEnv;
-  }
-
-  const file = resolve(process.cwd(), ".env");
-
-  if (!existsSync(file)) {
-    return null;
-  }
-
-  const match = /^DATABASE_URL=(.*)$/m.exec(readFileSync(file, "utf8"));
-  const value = match?.[1]?.trim().replace(/^["']|["']$/g, "");
-
-  return value && !value.includes("placeholder") ? value : null;
-}
 
 export default async function globalTeardown() {
   const url = databaseUrl();
