@@ -34,13 +34,6 @@ export type CartLineSnapshot = {
 };
 
 export type ValidatedCartLine = {
-  /**
-   * Capped at `CART_MAX_LINE_QUANTITY`. The UI never needs more than the per-line
-   * maximum, and this endpoint is public and unauthenticated — returning the true
-   * figure let anyone read exact inventory and sales velocity by polling (audit M-1).
-   * A low number is still disclosed because "only 3 left" is real UX and far less
-   * useful to a scraper than "480 in stock".
-   */
   availableQuantity: number;
   comparePrice: number | null;
   issues: CartIssue[];

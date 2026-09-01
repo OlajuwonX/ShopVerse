@@ -6,12 +6,6 @@ import { E2E_EMAIL_DOMAIN } from "./global-teardown";
 const GUEST_CART_KEY = "shopverse:guest-cart";
 const SIMPLE_PRODUCT = "/products/ikea-markus-office-chair";
 
-/**
- * Placing an order is a multi-statement transaction against a remote database. Measured at
- * ~2s on a warm instance and ~12s on a cold or throttled one, so the default 10s expect
- * timeout reads infrastructure latency as a functional failure. These assertions are about
- * correctness, not speed.
- */
 const ORDER_TIMEOUT_MS = 40_000;
 
 async function addProduct(page: Page) {
@@ -262,7 +256,6 @@ test.describe("checkout", () => {
     await fillDelivery(page);
     await chooseState(page, "Lagos");
 
-    // Stand in for a price edit between the page rendering and the customer pressing Pay.
     await page.evaluate(() => {
       const field = document.querySelector<HTMLInputElement>(
         'input[name="acknowledgedTotal"]',

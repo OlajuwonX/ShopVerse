@@ -17,9 +17,6 @@ export default defineConfig({
     environment: "node",
     fileParallelism: false,
     globals: false,
-    // Integration tests run against a remote Neon instance whose latency varies widely;
-    // order creation alone has been measured between 2s and 12s. These bounds are about
-    // tolerating infrastructure, not about slow assertions.
     hookTimeout: 90_000,
     exclude: ["tests/e2e/**"],
     include: ["tests/**/*.test.ts"],

@@ -1,12 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-/**
- * WCAG 1.4.4 (Resize Text) and 1.4.10 (Reflow): content must not require horizontal
- * scrolling at 320px, nor when a reader scales text to 200%. Layouts that key only on
- * viewport width pass the first and fail the second, which is exactly what audit finding
- * M-3 caught — axe cannot see it because axe does not simulate text scaling.
- */
-
 const ROUTES = ["/", "/categories/electronics", "/cart", "/checkout", "/wishlist"];
 
 async function horizontalOverflow(page: Page) {
@@ -26,7 +19,6 @@ async function horizontalOverflow(page: Page) {
         continue;
       }
 
-      // A rail that scrolls sideways on purpose is not a reflow failure.
       let parent = node.parentElement;
       let insideScroller = false;
 

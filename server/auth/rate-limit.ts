@@ -23,12 +23,6 @@ function addMs(date: Date, ms: number) {
   return new Date(date.getTime() + ms);
 }
 
-/**
- * The counter is advanced by a single statement so Postgres arbitrates concurrency.
- * A read-then-write here lets N simultaneous requests all observe the same `attempts`
- * and write the same value, advancing the counter by one instead of N — which is how a
- * brute-force or checkout flood slips through a limit that looks correct in isolation.
- */
 export async function checkRateLimit(config: RateLimitConfig, identifier: string) {
   const now = new Date();
   const windowFloor = addMs(now, -config.windowMs);

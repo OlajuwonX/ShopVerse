@@ -66,8 +66,6 @@ describe.skipIf(!hasRealDatabase)("checkRateLimit", () => {
   });
 
   it("counts every concurrent attempt, not just one (H-1)", async () => {
-    // maxAttempts is set above the burst so no block engages; a blocked caller stops
-    // incrementing by design, which would otherwise mask a lost update.
     const limit = config({ maxAttempts: 1000 });
 
     await Promise.all(Array.from({ length: 12 }, () => checkRateLimit(limit, "burst")));

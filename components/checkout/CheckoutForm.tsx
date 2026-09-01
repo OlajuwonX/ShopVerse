@@ -178,10 +178,6 @@ export function CheckoutForm() {
         value={String(renderedAt)}
       />
       <input name="checkoutAttemptId" type="hidden" value={attemptId} />
-      {/*
-        The total the customer is looking at. The server recomputes the charge and refuses
-        the order if these disagree (CART-01); it is consent, never money.
-      */}
       <input name="acknowledgedTotal" type="hidden" value={String(totals.total)} />
       <input
         name="lines"

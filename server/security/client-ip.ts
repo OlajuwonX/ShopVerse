@@ -1,11 +1,6 @@
 const IPV4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
 const IPV6 = /^[0-9a-f:]+$/i;
 
-/**
- * How many reverse proxies sit in front of the app. On Vercel this is 1.
- * The client IP is the Nth entry from the *right* of `x-forwarded-for`; everything
- * to the left of that was supplied by the caller and can be forged freely.
- */
 export const DEFAULT_TRUSTED_PROXY_HOPS = 1;
 
 function isIpAddress(value: string) {
@@ -41,18 +36,6 @@ export type ClientIpHeaders = {
   vercelForwardedFor?: string | null;
 };
 
-/**
- * Resolves the caller's IP from headers a client cannot forge.
- *
- * Order matters:
- *   1. `x-vercel-forwarded-for` — written by Vercel's edge, overwriting anything sent.
- *   2. `x-real-ip` — written by the immediate reverse proxy.
- *   3. `x-forwarded-for`, counted from the right by the number of trusted hops.
- *
- * Returns `null` rather than a guess when nothing trustworthy is present. Callers fall
- * back to a shared bucket, which throttles unattributable traffic together instead of
- * handing every request its own fresh quota.
- */
 export function resolveClientIp(
   headers: ClientIpHeaders,
   trustedProxyHops = DEFAULT_TRUSTED_PROXY_HOPS,

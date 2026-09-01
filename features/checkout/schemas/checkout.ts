@@ -62,12 +62,6 @@ export const deliveryDetailsSchema = z.object({
 export type DeliveryDetails = z.infer<typeof deliveryDetailsSchema>;
 
 export const checkoutSubmissionSchema = deliveryDetailsSchema.extend({
-  /**
-   * The total the customer was shown when they pressed Pay. This is a *consent
-   * assertion*, never money: the server recomputes the charge from the database and
-   * refuses the order if the two disagree (CART-01). It is deliberately not used in
-   * any arithmetic, which is what keeps CART-07 intact.
-   */
   acknowledgedTotal: z.coerce
     .number()
     .int({ message: "Refresh the page and try again" })

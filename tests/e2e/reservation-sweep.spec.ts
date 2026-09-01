@@ -38,13 +38,6 @@ test.describe("reservation sweep endpoint", () => {
     expect(response.headers()["cache-control"]).toContain("no-store");
   });
 
-  /**
-   * The four cases above all assert 404, and with no `CRON_SECRET` configured they all
-   * pass through the `not_configured` branch before the bearer check runs at all — so the
-   * suite stayed green whether the authorisation logic worked or was missing entirely.
-   * This is the case that fails when the route is switched off, which is the state the
-   * Stage 1-27 audit found it in.
-   */
   test.describe("with the secret configured", () => {
     test.skip(
       cronSecret === null,

@@ -52,7 +52,6 @@ function attempt() {
   return crypto.randomUUID();
 }
 
-/** The total a customer would have been shown, i.e. a matching consent assertion. */
 function totalFor(
   entries: readonly { quantity: number; unitPrice: number }[],
   state = "Lagos",
@@ -619,7 +618,6 @@ describe.skipIf(!hasRealDatabase)("attempt replay binding (M-2)", () => {
 
     await trackOrder(mine.order.id);
 
-    // Same attempt id, different customer.
     const theirs = await createPendingOrder({
       acknowledgedTotal: oneUnit,
       checkoutAttemptId: attemptId,

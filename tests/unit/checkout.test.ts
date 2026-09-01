@@ -190,9 +190,6 @@ describe("checkoutSubmissionSchema", () => {
       "acknowledgedTotal is the only money-shaped field the client may send",
     ).toStrictEqual(["acknowledgedTotal"]);
 
-    // It is never used as an amount: the server recomputes the charge and refuses the
-    // order when the two disagree. Proven in tests/integration/orders.test.ts —
-    // "cannot be talked into charging less than the catalogue says".
     expect(parsed.data!.acknowledgedTotal).toBe(1_250_00);
   });
 

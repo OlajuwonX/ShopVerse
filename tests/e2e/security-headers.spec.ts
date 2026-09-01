@@ -40,8 +40,6 @@ test("the policy restricts the directives that matter", async ({ request }) => {
   const response = await request.get("/");
   const policy = directives(response.headers()["content-security-policy"] ?? "");
 
-  // Without these, an injected script can load its payload, exfiltrate over fetch,
-  // or post a forged form off-origin.
   expect(policy.get("default-src")).toBe("'self'");
   expect(policy.get("form-action")).toBe("'self'");
   expect(policy.get("object-src")).toBe("'none'");

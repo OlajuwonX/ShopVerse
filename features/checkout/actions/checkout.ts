@@ -66,18 +66,6 @@ function invalid(
   return { fieldErrors, formError, status: "invalid", validatedAttemptId: null };
 }
 
-/**
- * Returns `null` when the payload is unreadable, when any single line is malformed, or
- * when the same product and variant appears twice.
- *
- * This used to drop bad lines and carry on, which would place an order for fewer items
- * than the customer is looking at. The `acknowledgedTotal` gate catches that today,
- * because the totals no longer agree — but a short order must not depend on a second
- * gate noticing. A duplicate pair is rejected for the same reason: the client dedupes
- * by `productId:variantId`, so a repeat did not come from our own cart, and reserving it
- * would collide with `inventory_reservations_order_variant_unique` deep inside the order
- * transaction where the failure reads as something else entirely.
- */
 function parseLines(raw: FormDataEntryValue | null): CartLineInput[] | null {
   if (typeof raw !== "string") {
     return null;

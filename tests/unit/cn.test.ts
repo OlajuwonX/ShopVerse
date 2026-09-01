@@ -11,12 +11,6 @@ import { cn } from "@/lib/cn";
 
 const ROOT = resolve(import.meta.dirname, "../..");
 
-/**
- * Font sizes live in `--text-*` theme variables, so `text-label` and `text-body-sm` are
- * font-size utilities that tailwind-merge would otherwise mistake for colours. When it
- * does, it drops the colour from `cn(variant, size)` and every button label falls back to
- * inheriting `--color-text` — dark text on a dark button.
- */
 describe("cn distinguishes font-size utilities from colour utilities", () => {
   const sizes: ButtonSize[] = ["sm", "md", "lg"];
 
@@ -80,7 +74,6 @@ describe("cn distinguishes font-size utilities from colour utilities", () => {
     for (const match of css.matchAll(/^\s*--text-([a-z0-9-]+):/gm)) {
       const name = match[1];
 
-      // `--text-body-sm--line-height` and friends configure a size, they are not one.
       if (name !== undefined && !name.endsWith("--line-height")) {
         declared.add(name);
       }

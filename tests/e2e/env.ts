@@ -1,10 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-/**
- * Playwright's own process does not load `.env` — only the app it starts does. Setup,
- * teardown and any test that needs a server-side secret read it from the file directly.
- */
 export function readEnvValue(key: string): string | null {
   const fromEnv = process.env[key];
 
