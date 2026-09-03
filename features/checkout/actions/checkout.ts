@@ -25,6 +25,7 @@ import { getRequestContext } from "@/server/security/request-context";
 import { validateCart } from "@/server/services/cart";
 import { quoteDelivery } from "@/server/services/delivery";
 import { createPendingOrder, type CreateOrderIssue } from "@/server/services/orders";
+import { initializePayment } from "@/server/services/payments";
 
 const GENERIC_FAILURE =
   "We could not start your checkout. Check your details and try again.";
@@ -271,10 +272,33 @@ async function runCheckout(formData: FormData): Promise<CheckoutState> {
     targetType: "order",
   });
 
+  const payment = await initializePayment({ orderId: created.order.id });
+
+  if (payment.status === "unavailable" || payment.status === "rejected") {
+    await writeAuditLog({
+      action: "payment.initialize_failed",
+      actorType: "system",
+      after: { orderReference: created.order.reference, outcome: payment.status },
+      targetId: created.order.id,
+      targetType: "order",
+    });
+  }
+
+  const authorizationUrl =
+    payment.status === "initialized" || payment.status === "replayed"
+      ? payment.authorizationUrl
+      : undefined;
+
   return {
     fieldErrors: {},
-    formError: null,
+    formError:
+      authorizationUrl === undefined && payment.status !== "not_configured"
+        ? "reason" in payment
+          ? payment.reason
+          : null
+        : null,
     order: {
+      ...(authorizationUrl ? { authorizationUrl } : {}),
       grandTotal: created.order.grandTotal,
       reference: created.order.reference,
     },

@@ -28,6 +28,10 @@ function defaultRandomBytes(length: number) {
   return crypto.getRandomValues(new Uint8Array(length));
 }
 
+export const PAYMENT_REFERENCE_PREFIX = "sv-";
+
+export const PAYMENT_REFERENCE_PATTERN = /^sv-[a-z0-9]{16}$/;
+
 export function createPaymentReference(
   randomBytes: (length: number) => Uint8Array = defaultRandomBytes,
 ) {
@@ -39,5 +43,5 @@ export function createPaymentReference(
     reference += ALPHABET[byte % ALPHABET.length];
   }
 
-  return `sv_${reference.toLowerCase()}`;
+  return `${PAYMENT_REFERENCE_PREFIX}${reference.toLowerCase()}`;
 }

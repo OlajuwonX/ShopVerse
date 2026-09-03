@@ -99,6 +99,7 @@ export const checkoutFields = [
 export type CheckoutField = (typeof checkoutFields)[number];
 
 export type PlacedOrder = {
+  authorizationUrl?: string;
   grandTotal: number;
   reference: string;
 };

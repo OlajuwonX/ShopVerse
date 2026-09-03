@@ -225,6 +225,7 @@ export const paymentAttempts = pgTable(
     checkoutAttemptId: text("checkout_attempt_id").notNull(),
     reference: text("reference").notNull(),
     providerTransactionId: text("provider_transaction_id"),
+    authorizationUrl: text("authorization_url"),
     provider: paymentProvider("provider").notNull().default("paystack"),
     expectedAmount: integer("expected_amount").notNull(),
     receivedAmount: integer("received_amount"),
@@ -239,8 +240,10 @@ export const paymentAttempts = pgTable(
     ...timestamps,
   },
   (table) => [
-    uniqueIndex("payment_attempts_order_unique").on(table.orderId),
-    uniqueIndex("payment_attempts_checkout_attempt_unique").on(table.checkoutAttemptId),
+    uniqueIndex("payment_attempts_order_live_unique")
+      .on(table.orderId)
+      .where(sql`${table.status} in ('initialized', 'pending', 'processing')`),
+    index("payment_attempts_checkout_attempt_idx").on(table.checkoutAttemptId),
     uniqueIndex("payment_attempts_reference_unique").on(table.reference),
     uniqueIndex("payment_attempts_provider_transaction_unique")
       .on(table.providerTransactionId)

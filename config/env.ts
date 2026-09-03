@@ -21,6 +21,13 @@ const serverEnvSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().min(1).optional(),
 
   CRON_SECRET: z.string().min(32).optional(),
+
+  PAYSTACK_SECRET_KEY: z
+    .string()
+    .regex(/^sk_(test|live)_[A-Za-z0-9]+$/, {
+      message: "PAYSTACK_SECRET_KEY must look like sk_test_... or sk_live_...",
+    })
+    .optional(),
 });
 
 const clientEnvSchema = z.object({

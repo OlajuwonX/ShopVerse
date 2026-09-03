@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createOrderReference,
   createPaymentReference,
+  PAYMENT_REFERENCE_PATTERN,
   isOrderReference,
   ORDER_REFERENCE_PREFIX,
 } from "@/lib/order-reference";
@@ -71,8 +72,17 @@ describe("createPaymentReference", () => {
   it("is distinct from the customer-facing order reference", () => {
     const payment = createPaymentReference();
 
-    expect(payment.startsWith("sv_")).toBe(true);
+    expect(payment.startsWith("sv-")).toBe(true);
     expect(isOrderReference(payment)).toBe(false);
+  });
+
+  it("uses only characters Paystack accepts in a transaction reference", () => {
+    for (let i = 0; i < 200; i += 1) {
+      const payment = createPaymentReference();
+
+      expect(payment, payment).toMatch(PAYMENT_REFERENCE_PATTERN);
+      expect(payment, payment).toMatch(/^[A-Za-z0-9\-.=]+$/);
+    }
   });
 
   it("is unique across many calls", () => {

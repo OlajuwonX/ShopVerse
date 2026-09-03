@@ -50,6 +50,13 @@
       "when": 1787483565350,
       "tag": "0006_talented_silver_surfer",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788461969945,
+      "tag": "0007_funny_sentinels",
+      "breakpoints": true
     }
   ]
 }

@@ -75,13 +75,29 @@ export function CheckoutForm() {
   }, [state.formError, state.status]);
 
   useEffect(() => {
-    if (state.status === "ordered" && state.order) {
+    if (state.status !== "ordered" || !state.order) {
+      return;
+    }
+
+    const authorizationUrl = state.order.authorizationUrl;
+
+    if (authorizationUrl) {
       notify({
-        description: `We are holding your items while payment opens. Keep your reference ${state.order.reference}.`,
+        description: "Taking you to Paystack to complete your payment.",
         title: `Order ${state.order.reference} placed`,
         tone: "success",
       });
+
+      window.location.assign(authorizationUrl);
+
+      return;
     }
+
+    notify({
+      description: `We are holding your items while payment opens. Keep your reference ${state.order.reference}.`,
+      title: `Order ${state.order.reference} placed`,
+      tone: "success",
+    });
   }, [state.order, state.status]);
 
   if (stored.length === 0) {
@@ -223,10 +239,18 @@ export function CheckoutForm() {
               Order {state.order.reference} placed
             </h2>
             <p className="text-body-sm text-text">
-              We are holding your items for {RESERVATION_MINUTES} minutes while the
-              payment step opens. Nothing has been charged yet. Keep your reference safe
-              — you will need it to track this order.
+              {state.order.authorizationUrl
+                ? "Taking you to Paystack to complete your payment. Nothing has been charged yet."
+                : `We are holding your items for ${RESERVATION_MINUTES} minutes while the payment step opens. Nothing has been charged yet. Keep your reference safe — you will need it to track this order.`}
             </p>
+            {state.order.authorizationUrl ? (
+              <a
+                className="text-body-sm font-semibold text-text underline underline-offset-2"
+                href={state.order.authorizationUrl}
+              >
+                Continue to Paystack
+              </a>
+            ) : null}
           </section>
         ) : null}
 
