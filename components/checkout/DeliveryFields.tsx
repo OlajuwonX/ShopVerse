@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
+import { Select, type SelectOption } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { CHECKOUT_FIELD_LIMITS } from "@/constants/checkout";
 import {
@@ -13,6 +13,15 @@ import type {
   CheckoutField,
   CheckoutState,
 } from "@/features/checkout/schemas/checkout";
+
+const stateOptions: readonly SelectOption[] = nigerianStates.map((state) => ({
+  label: state,
+  value: state,
+}));
+
+const countryOptions: readonly SelectOption[] = [
+  { label: SUPPORTED_COUNTRY_NAME, value: SUPPORTED_COUNTRY },
+];
 
 export type DeliveryValues = Record<CheckoutField, string>;
 
@@ -47,6 +56,17 @@ export function DeliveryFields({ errors, onChange, values }: DeliveryFieldsProps
         >,
       ) => {
         onChange(field, event.target.value);
+      },
+      value: values[field],
+    };
+  }
+
+  function selectProps(field: CheckoutField) {
+    return {
+      ...(errors[field] ? { error: errors[field] } : {}),
+      name: field,
+      onValueChange: (next: string) => {
+        onChange(field, next);
       },
       value: values[field],
     };
@@ -123,18 +143,11 @@ export function DeliveryFields({ errors, onChange, values }: DeliveryFieldsProps
           <Select
             autoComplete="address-level1"
             label="State"
+            options={stateOptions}
+            placeholder="Choose a state"
             required
-            {...fieldProps("state")}
-          >
-            <option disabled value="">
-              Choose a state
-            </option>
-            {nigerianStates.map((state) => (
-              <option key={state} value={state}>
-                {state}
-              </option>
-            ))}
-          </Select>
+            {...selectProps("state")}
+          />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -151,11 +164,10 @@ export function DeliveryFields({ errors, onChange, values }: DeliveryFieldsProps
             autoComplete="country"
             hint="We deliver within Nigeria"
             label="Country"
+            options={countryOptions}
             required
-            {...fieldProps("country")}
-          >
-            <option value={SUPPORTED_COUNTRY}>{SUPPORTED_COUNTRY_NAME}</option>
-          </Select>
+            {...selectProps("country")}
+          />
         </div>
 
         <Input

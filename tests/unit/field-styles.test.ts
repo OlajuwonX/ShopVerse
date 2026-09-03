@@ -69,12 +69,20 @@ function collectFormControls() {
   for (const file of SOURCE_DIRS.flatMap(collectSourceFiles)) {
     const source = readFileSync(resolve(ROOT, file), "utf8");
 
-    for (const match of source.matchAll(/<(input|select|textarea)(?=[\s/>])/g)) {
+    for (const match of source.matchAll(/<(input|select|textarea|button)(?=[\s/>])/g)) {
       const tag = readTag(source, match.index);
 
-      if (tag !== null) {
-        controls.push({ file, tag });
+      if (tag === null) {
+        continue;
       }
+
+      const isButton = match[1] === "button";
+
+      if (isButton && !/role="combobox"/.test(tag)) {
+        continue;
+      }
+
+      controls.push({ file, tag });
     }
   }
 
@@ -93,9 +101,15 @@ function isFocusableTextEntry(tag: string) {
 
 describe("shared field styling", () => {
   it("finds the form controls it is meant to be checking", () => {
+    const fields = collectFormControls().filter(({ tag }) => isFocusableTextEntry(tag));
+
+    expect(fields.length).toBeGreaterThanOrEqual(4);
+
     expect(
-      collectFormControls().filter(({ tag }) => isFocusableTextEntry(tag)).length,
-    ).toBeGreaterThan(3);
+      fields.some(
+        ({ tag }) => /role="combobox"/.test(tag) && tag.startsWith("<button"),
+      ),
+    ).toBe(true);
   });
 
   it("keeps the opt-up to 16px inside FIELD_TEXT", () => {

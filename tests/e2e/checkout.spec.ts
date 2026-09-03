@@ -37,7 +37,8 @@ function payButton(page: Page) {
 }
 
 async function chooseState(page: Page, state: string) {
-  await page.getByLabel("State", { exact: false }).selectOption(state);
+  await page.getByRole("combobox", { name: /^State/ }).click();
+  await page.getByRole("option", { name: state, exact: true }).click();
   await expect(payButton(page)).toHaveText(/^Pay /);
 }
 
@@ -116,23 +117,40 @@ test.describe("checkout", () => {
     await addProduct(page);
     await page.goto("/checkout");
 
-    const expected: [string, string][] = [
+    const textFields: [string, string][] = [
       ["First name", "given-name"],
       ["Last name", "family-name"],
       ["Email", "email"],
       ["Phone number", "tel"],
       ["Street address", "street-address"],
       ["City or town", "address-level2"],
-      ["State", "address-level1"],
       ["Postal code", "postal-code"],
-      ["Country", "country"],
     ];
 
-    for (const [label, autocomplete] of expected) {
+    for (const [label, autocomplete] of textFields) {
       await expect(
         page.getByLabel(label, { exact: false }),
         `${label} autocomplete`,
       ).toHaveAttribute("autocomplete", autocomplete);
+    }
+
+    const dropdowns: [string, string][] = [
+      ["state", "address-level1"],
+      ["country", "country"],
+    ];
+
+    for (const [name, autocomplete] of dropdowns) {
+      await expect(
+        page.locator(`input[name="${name}"]`),
+        `${name} submitted field`,
+      ).toHaveAttribute("autocomplete", autocomplete);
+    }
+
+    for (const label of ["State", "Country"]) {
+      await expect(
+        page.getByRole("combobox", { name: new RegExp(`^${label}`) }),
+        `${label} is labelled`,
+      ).toBeVisible();
     }
   });
 
@@ -156,7 +174,8 @@ test.describe("checkout", () => {
     await expect(page.getByLabel("Street address", { exact: false })).toHaveValue(
       "12 Adeola Odeku Street",
     );
-    await expect(page.getByLabel("State", { exact: false })).toHaveValue("Lagos");
+    await expect(page.locator('input[name="state"]')).toHaveValue("Lagos");
+    await expect(page.getByRole("combobox", { name: /^State/ })).toHaveText(/Lagos/);
   });
 
   test("errors are programmatically associated with their field", async ({ page }) => {

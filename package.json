@@ -22,7 +22,8 @@
     "db:check": "drizzle-kit check",
     "db:seed": "tsx --env-file-if-exists=.env server/db/seed/index.ts",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:dev": "playwright test --config=playwright.dev.config.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

@@ -1,11 +1,8 @@
 "use client";
 
-import { useId } from "react";
-
-import { FIELD_FOCUS, FIELD_TEXT } from "@/components/ui/field-styles";
+import { Select, type SelectOption } from "@/components/ui/Select";
 import { catalogueSortOptions } from "@/features/products/schemas/catalogue-query";
 import { useCatalogueFilters } from "@/features/filters/useCatalogueFilters";
-import { cn } from "@/lib/cn";
 
 const SORT_LABELS: Record<(typeof catalogueSortOptions)[number], string> = {
   newest: "Newest",
@@ -15,33 +12,24 @@ const SORT_LABELS: Record<(typeof catalogueSortOptions)[number], string> = {
   rating: "Highest rated",
 };
 
+const sortOptions: readonly SelectOption[] = catalogueSortOptions.map((option) => ({
+  label: SORT_LABELS[option],
+  value: option,
+}));
+
 export function SortSelect() {
-  const id = useId();
   const { filters, update } = useCatalogueFilters();
 
   return (
-    <div className="flex items-center gap-2">
-      <label className="text-caption font-semibold text-text-muted" htmlFor={id}>
-        Sort
-      </label>
-      <select
-        className={cn(
-          "min-h-11 rounded-md border border-border bg-surface-raised px-3 text-text",
-          FIELD_TEXT,
-          FIELD_FOCUS,
-        )}
-        id={id}
-        onChange={(event) => {
-          update({ sort: event.target.value as (typeof catalogueSortOptions)[number] });
-        }}
-        value={filters.sort}
-      >
-        {catalogueSortOptions.map((option) => (
-          <option key={option} value={option}>
-            {SORT_LABELS[option]}
-          </option>
-        ))}
-      </select>
-    </div>
+    <Select
+      className="min-w-0"
+      label="Sort"
+      labelPlacement="inline"
+      onValueChange={(next) => {
+        update({ sort: next as (typeof catalogueSortOptions)[number] });
+      }}
+      options={sortOptions}
+      value={filters.sort}
+    />
   );
 }
