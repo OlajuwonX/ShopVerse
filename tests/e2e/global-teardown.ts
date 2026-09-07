@@ -2,7 +2,9 @@ import { neon } from "@neondatabase/serverless";
 
 import { databaseUrl } from "./env";
 
-export const E2E_EMAIL_DOMAIN = "e2e.shopverse.test";
+export const E2E_EMAIL_DOMAIN = "shopverse-e2e.example.com";
+
+export const RETIRED_E2E_EMAIL_DOMAINS = ["e2e.shopverse.test"];
 
 export default async function globalTeardown() {
   const url = databaseUrl();
@@ -12,9 +14,13 @@ export default async function globalTeardown() {
   }
 
   const sql = neon(url);
-  const pattern = `%@${E2E_EMAIL_DOMAIN}`;
+  const patterns = [E2E_EMAIL_DOMAIN, ...RETIRED_E2E_EMAIL_DOMAINS].map(
+    (domain) => `%@${domain}`,
+  );
 
-  const rows = await sql`select id from orders where guest_email like ${pattern}`;
+  const rows = await sql`
+    select id from orders where guest_email like any(${patterns})
+  `;
 
   if (rows.length === 0) {
     return;

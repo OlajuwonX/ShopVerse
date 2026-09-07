@@ -8,6 +8,7 @@ import { db } from "@/server/db";
 import { orderEvents, orders, paymentAttempts } from "@/server/db/schema";
 import {
   initializeTransaction,
+  readPaystackSecret,
   type PaystackTransport,
 } from "@/server/payments/paystack";
 
@@ -170,7 +171,10 @@ export async function initializePayment(
       metadata: { order_reference: order.reference },
       reference,
     },
-    input.transport ? { transport: input.transport } : {},
+    {
+      secret: readPaystackSecret(),
+      ...(input.transport ? { transport: input.transport } : {}),
+    },
   );
 
   if (provider.status !== "ok") {
@@ -239,4 +243,27 @@ export async function initializePayment(
     reference,
     status: "initialized",
   };
+}
+
+export type PaymentLookup = {
+  orderReference: string;
+  orderStatus: string;
+  paymentStatus: string;
+};
+
+export async function findPaymentByReference(
+  reference: string,
+): Promise<PaymentLookup | null> {
+  const rows = await db
+    .select({
+      orderReference: orders.reference,
+      orderStatus: orders.status,
+      paymentStatus: paymentAttempts.status,
+    })
+    .from(paymentAttempts)
+    .innerJoin(orders, eq(orders.id, paymentAttempts.orderId))
+    .where(eq(paymentAttempts.reference, reference))
+    .limit(1);
+
+  return rows[0] ?? null;
 }

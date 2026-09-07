@@ -45,25 +45,15 @@ function authorisationHeader(secret: string) {
   return `Bearer ${secret}`;
 }
 
-export function isPaystackConfigured() {
-  return typeof serverEnv.PAYSTACK_SECRET_KEY === "string";
-}
-
-export function paystackMode() {
-  const key = serverEnv.PAYSTACK_SECRET_KEY;
-
-  if (key === undefined) {
-    return "unconfigured" as const;
-  }
-
-  return key.startsWith("sk_live_") ? ("live" as const) : ("test" as const);
+export function readPaystackSecret() {
+  return serverEnv.PAYSTACK_SECRET_KEY;
 }
 
 export async function initializeTransaction(
   input: PaystackInitializeInput,
-  options: { secret?: string | undefined; transport?: PaystackTransport } = {},
+  options: { secret: string | undefined; transport?: PaystackTransport },
 ): Promise<PaystackInitializeResult> {
-  const secret = options.secret ?? serverEnv.PAYSTACK_SECRET_KEY;
+  const { secret } = options;
 
   if (secret === undefined || secret.length === 0) {
     return { status: "not_configured" };

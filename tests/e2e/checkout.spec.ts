@@ -11,6 +11,7 @@ const ORDER_TIMEOUT_MS = 40_000;
 async function addProduct(page: Page) {
   await page.goto(SIMPLE_PRODUCT);
   await page.getByRole("button", { name: /^Add .+ to cart$/ }).click();
+  await expect(page.getByRole("link", { name: /^Cart, [1-9]/ })).toBeVisible();
 }
 
 async function fillDelivery(page: Page, overrides: Record<string, string> = {}) {
@@ -235,13 +236,9 @@ test.describe("checkout", () => {
     await page.waitForTimeout(2100);
     await payButton(page).click();
 
-    await expect(page.getByRole("heading", { name: /^Order SV-/ })).toBeVisible({
-      timeout: ORDER_TIMEOUT_MS,
-    });
-    await expect(page.getByRole("log", { name: "Notifications" })).toContainText(
-      /^Order SV-[2-9A-HJ-NP-Z]{8} placed/,
-      { timeout: ORDER_TIMEOUT_MS },
-    );
+    await page.waitForURL(/checkout\.paystack\.com/, { timeout: ORDER_TIMEOUT_MS });
+
+    expect(page.url()).toMatch(/^https:\/\/checkout\.paystack\.com\/[A-Za-z0-9]+$/);
   });
 
   test("resubmitting the same checkout attempt replays one order (PAY-01)", async ({
@@ -256,14 +253,21 @@ test.describe("checkout", () => {
     await page.waitForTimeout(2100);
     await payButton(page).click();
 
-    const heading = page.getByRole("heading", { name: /^Order SV-/ });
-    await expect(heading).toBeVisible({ timeout: ORDER_TIMEOUT_MS });
+    await page.waitForURL(/checkout\.paystack\.com/, { timeout: ORDER_TIMEOUT_MS });
 
-    const first = await heading.textContent();
+    const first = page.url();
 
+    await page.goBack();
+    await expect(payButton(page)).toBeVisible({ timeout: ORDER_TIMEOUT_MS });
+
+    await fillDelivery(page);
+    await chooseState(page, "Lagos");
+    await page.waitForTimeout(2100);
     await payButton(page).click();
 
-    await expect(heading).toHaveText(first ?? "", { timeout: ORDER_TIMEOUT_MS });
+    await page.waitForURL(/checkout\.paystack\.com/, { timeout: ORDER_TIMEOUT_MS });
+
+    expect(page.url()).toBe(first);
   });
 
   test("refuses an order whose total the customer never saw (CART-01)", async ({
